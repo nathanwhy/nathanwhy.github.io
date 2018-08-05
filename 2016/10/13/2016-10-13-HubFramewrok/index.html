@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  
+  <title>HubFramework 的组件化实现 | Nathanwhy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="HubFramework 是 spotify 公司开源的一套组件驱动 UI 框架，可快速构建 UI，可定制化程度较高，同时也可以很轻易地用 Json 数据来动态构建 UI。 HubFramework 是用 Objective-C 写的，同时它完全支持 Swift，其 demo 也是完全由 Swift 实现。 最近 Instagram 刚开源 IGListKit 也是完全用 Objective-C，">
+<meta name="keywords" content="iOS,framework">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HubFramework 的组件化实现">
+<meta property="og:url" content="https://nathanwhy.com/2016/10/13/2016-10-13-HubFramewrok/index.html">
+<meta property="og:site_name" content="Nathanwhy">
+<meta property="og:description" content="HubFramework 是 spotify 公司开源的一套组件驱动 UI 框架，可快速构建 UI，可定制化程度较高，同时也可以很轻易地用 Json 数据来动态构建 UI。 HubFramework 是用 Objective-C 写的，同时它完全支持 Swift，其 demo 也是完全由 Swift 实现。 最近 Instagram 刚开源 IGListKit 也是完全用 Objective-C，">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://nathanwhy.com/images/post/2016-10-12-image.png">
+<meta property="og:updated_time" content="2016-12-19T06:46:22.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="HubFramework 的组件化实现">
+<meta name="twitter:description" content="HubFramework 是 spotify 公司开源的一套组件驱动 UI 框架，可快速构建 UI，可定制化程度较高，同时也可以很轻易地用 Json 数据来动态构建 UI。 HubFramework 是用 Objective-C 写的，同时它完全支持 Swift，其 demo 也是完全由 Swift 实现。 最近 Instagram 刚开源 IGListKit 也是完全用 Objective-C，">
+<meta name="twitter:image" content="https://nathanwhy.com/images/post/2016-10-12-image.png">
+<meta name="twitter:creator" content="@nathanwhy">
+  
+  
+    <link rel="icon" href="images/favicon.ico">
+  
+  <link rel="stylesheet" href="/css/typing.css">
+  <link rel="stylesheet" href="/css/donate.css">
+  
+</head>
+
+  
+    
+      <body>
+    
+  
+      <div id="container" class="container">
+        <article id="post-2016-10-13-HubFramewrok" class="article article-type-post" itemscope itemprop="blogPost">
+  <header id="header" class="header">
+    <div class="mobile-nav">
+      <h1 class="nickname">Nathanwhy</h1>
+      <a id="menu">
+        &#9776; Menu
+      </a>
+    </div>
+    
+        <nav id="main-nav" class="main-nav nav-left">
+    
+    
+      <a class="main-nav-link" href="/">Home</a>
+    
+      <a class="main-nav-link" href="/archives">Archives</a>
+    
+      <a class="main-nav-link" href="/about">About</a>
+    
+  </nav>
+</header>
+
+  <hr/>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      HubFramework 的组件化实现
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry typo" itemprop="articleBody">
+      
+        <p><a href="https://github.com/spotify/HubFramework" target="_blank" rel="noopener">HubFramework</a> 是 spotify 公司开源的一套组件驱动 UI 框架，可快速构建 UI，可定制化程度较高，同时也可以很轻易地用 Json 数据来动态构建 UI。</p>
+<p>HubFramework 是用 Objective-C 写的，同时它完全支持 Swift，其 demo 也是完全由 Swift 实现。</p>
+<p>最近 Instagram 刚开源 <a href="https://github.com/Instagram/IGListKit" target="_blank" rel="noopener">IGListKit</a> 也是完全用 Objective-C，demo 由 Swift 完成。</p>
+<p>要入手 HubFramework，需要了解它的五大模块，分别为 Action、Component、Content、Layout 和 JSON。本文以介绍前四者为主。</p>
+<h2 id="Action"><a href="#Action" class="headerlink" title="Action"></a>Action</h2><p><img src="/images/post/2016-10-12-image.png" alt="image"></p>
+<p>自己粗劣地画了张图，大致能展现整个事件响应过程。</p>
+<h3 id="事件输入"><a href="#事件输入" class="headerlink" title="事件输入"></a>事件输入</h3><p>类似 textField 和 button 的响应事件都会由 actionDelegate 传递给 ViewControllerImplementation 来处理。</p>
+<p>而集合视图的代理直接是 ViewControllerImplementation，比如常见的 <code>didSelectItemAtIndexPath:</code>。因而 cell 的点击事件直接由 ViewControllerImplementation 处理。</p>
+<p>实际上，大部分的 Components 都是添加在 CollectionViewCell 上的，这里并不存在我们常用的 <code>UITableView</code>，而是直接由 <code>UICollectionView</code> 代替实现。</p>
+<h3 id="事件处理与响应"><a href="#事件处理与响应" class="headerlink" title="事件处理与响应"></a>事件处理与响应</h3><p>ViewControllerImplementation 收到事件便会将各种数据封装成 Context，然后交给 ActionHandler 处理。</p>
+<p>通过 Context 可以拿到的数据不仅仅只有 ComponentModel 和 ViewURI，还包括 ViewModel， ViewController 和自定义的 CustomData。</p>
+<p>因此 ActionHandler 能处理的操作范围就大了。</p>
+<p>ActionHandler 默认只有一个。当 action 和 target 都存在的时候会执行 URI 跳转。</p>
+<p>官方建议尽量通过系统 OpenURL 来处理，同时也是为了支持远程调用，包括 deep link。</p>
+<p>但是对于非常规对象，就不可能那通过 OpenURL 来完成。那么这时候可以通过自定义 action 来实现。</p>
+<p>另一方面，除了 URI 跳转，组件也需要同步更新。比如 searchBar 的输入，于是请求数据，刷新视图。这时候只要组件遵守协议 <code>HUBContentOperationActionObserver</code>，也会收到响应事件。</p>
+<p>如果同一个页面的有多个组件都遵守这个协议，那么就都会受到响应事件，这时候就需要根据 customActionIdentifier 来区分。</p>
+<h2 id="Component"><a href="#Component" class="headerlink" title="Component"></a>Component</h2><p>Component 大致分为 header，body，overlays。body 主要由框架的 collectionView 实现，overlays 主要为 loadingView 等。</p>
+<p>Component 在收到 <code>configureViewWithModel:</code> 消息进行渲染，官方推荐尽量用 <code>HUBComponentModel</code> 协议预设的 property，基本可以满足大部分需求。除非需要定制化才使用 customData。</p>
+<p>其中 ComponentModel 还包含 target 对象，用于指定对应的 URI 跳转。</p>
+<h2 id="ContentOperation"><a href="#ContentOperation" class="headerlink" title="ContentOperation"></a>ContentOperation</h2><p>一个 ContentOperationFactory 带有多个 ContentOperation，而这些 ContentOperation 的顺序也决定了内容被加载的顺序。</p>
+<p>比如，有这么些 ContentOperations:</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">contentOperationFactory1</span><br><span class="line">  - contentOperationA1</span><br><span class="line">  - contentOperationB1</span><br><span class="line">contentOperationFactory2</span><br><span class="line">  - contentOperationA2</span><br><span class="line">  - contentOperationB2</span><br></pre></td></tr></table></figure>
+<p>那么他们的加载顺序是</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@[contentOperationA1, contentOperationB1, contentOperationA2, contentOperationB2];</span><br></pre></td></tr></table></figure>
+<p>前者加载完毕，后者才会继续加载。</p>
+<p>既然顺序定好了，便可以制定它的一些特性：</p>
+<ul>
+<li>当某个 contentOperation 调用 reschedul，会刷新组件，排在它之后的每个 contentOperation 也会 reschedul，而前面的不会；</li>
+<li>多个 contentOperations 是公用一个 ViewModelBuilder 的，这使得后者可以获得并修改前者配置的数据；</li>
+<li>ViewModelBuilder 在 contentOperations 中每传递一次，就会保存一份。这使得即使前者重新加载，获得的 ViewModelBuilder 也不包含后者所修改的。</li>
+</ul>
+<h2 id="Layout"><a href="#Layout" class="headerlink" title="Layout"></a>Layout</h2><p>layout 主要由多个 Layout trait 和一个 Layout manager 组成。</p>
+<p>Layout trait 用来表示组件间、组件与父组件是否应该有间距。比如 <code>HUBComponentLayoutTraitFullWidth</code> 表示左右都不要间距，<code>HUBComponentLayoutTraitStackable</code> 表示组件之间都同意才不要间距。一个组件可以返回多个 LayoutTrait 值。</p>
+<p>Layout manager 则根据 Layout trait 来返回需要的间距。一般情况下，这个 manager 是全局的，统一定义了每个组件的间距。如果有更多的特定情况，也可以通过增加 Layout Trait 类型来处理。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>iOS 开发发展到现在，各种基础库日趋完备。如何快速构建 UI，处理复杂交互，提高代码的可维护性与可测试性，仍是当前值得探索的问题。</p>
+<p>HubFrameWork 是一个很强大的框架，真个过程中你感觉不到 ViewController 的存在，也就不存在臃肿控制器的问题。业务代码都被分配到各自的 contentOperation 中执行，通过面向协议组合起来，很适合在多人开发中应用。其次，对组件进行标准化之后，便可以很方便地通过 JSON 动态更新 UI。</p>
+<p>另一方面来看，它具有一定的学习成本；大范围使用时需要注册较多 Feature 和 Component，内存占用问题需要考量。</p>
+
+      
+      
+    </div>
+    <footer class="article-footer">
+      <ul class="article-meta">
+        <li>
+          <span class="label">Published Date:</span>
+          <a href="/2016/10/13/2016-10-13-HubFramewrok/" class="article-date">
+  <time datetime="2016-10-12T16:09:00.000Z" itemprop="datePublished">2016-10-13</time>
+</a>
+
+        </li>
+        
+        
+          <li>
+            <span class="label">Tag:</span>
+            
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/framework/">framework</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/iOS/">iOS</a></li></ul>
+
+
+          </li>
+        
+        <hr/>
+      </ul>
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav" class="article-nav">
+  
+    <a href="/2017/04/16/2017-04-16-HTTPS/" id="article-nav-newer" class="article-nav-link-wrap newer">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          HTTPS 中的密码技术
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2016/06/30/2016-06-30-ReactiveCocoa-to-RxSwfit/" id="article-nav-older" class="article-nav-link-wrap older">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">从 ReactiveCocoa2.0 到 RxSwift</div>
+    </a>
+  
+</nav>
+
+
+  
+</article>
+
+
+
+
+
+
+
+
+
+
+      </div>
+      
+    <footer id="footer" class="post-footer footer">
+      
+      <hr/>
+      <div id="footerContent" class="footer-content">
+        <p>Nathanwhy</p>
+
+
+      </div>
+    </footer>
+
+      
+
+
+
+
+
+
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/typing.js"></script>
+<!--[if lt IE 9]><script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7/html5shiv.min.js"></script><![endif]-->
+
+
+
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-60259195-2', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+
+
+
+    </div>
+  </body>
+</html>

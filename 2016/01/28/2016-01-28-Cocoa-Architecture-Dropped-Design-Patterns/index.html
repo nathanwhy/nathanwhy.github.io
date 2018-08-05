@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  
+  <title>Artsy 工程师总结的一些 Cocoa 开发设计误区 | Nathanwhy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="这是给稀土掘金的一篇译文，原文出自 Author: orta - Artsy Engineering，感谢 walkingway、iThreeKing 校稿。 在开发 Artsy 这款 iOS app 的时候，我们尝试了一些设计模式。现在我想要谈谈现在我们有的和已经被移除的设计模式。我不会面面俱到，毕竟已经历了那么长时间，有那么多人参与过。我想从更高的层面去审视，关注那些总体上更重要的东西。 很重">
+<meta name="keywords" content="iOS">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Artsy 工程师总结的一些 Cocoa 开发设计误区">
+<meta property="og:url" content="https://nathanwhy.com/2016/01/28/2016-01-28-Cocoa-Architecture-Dropped-Design-Patterns/index.html">
+<meta property="og:site_name" content="Nathanwhy">
+<meta property="og:description" content="这是给稀土掘金的一篇译文，原文出自 Author: orta - Artsy Engineering，感谢 walkingway、iThreeKing 校稿。 在开发 Artsy 这款 iOS app 的时候，我们尝试了一些设计模式。现在我想要谈谈现在我们有的和已经被移除的设计模式。我不会面面俱到，毕竟已经历了那么长时间，有那么多人参与过。我想从更高的层面去审视，关注那些总体上更重要的东西。 很重">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2017-04-16T13:21:58.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Artsy 工程师总结的一些 Cocoa 开发设计误区">
+<meta name="twitter:description" content="这是给稀土掘金的一篇译文，原文出自 Author: orta - Artsy Engineering，感谢 walkingway、iThreeKing 校稿。 在开发 Artsy 这款 iOS app 的时候，我们尝试了一些设计模式。现在我想要谈谈现在我们有的和已经被移除的设计模式。我不会面面俱到，毕竟已经历了那么长时间，有那么多人参与过。我想从更高的层面去审视，关注那些总体上更重要的东西。 很重">
+<meta name="twitter:creator" content="@nathanwhy">
+  
+  
+    <link rel="icon" href="images/favicon.ico">
+  
+  <link rel="stylesheet" href="/css/typing.css">
+  <link rel="stylesheet" href="/css/donate.css">
+  
+</head>
+
+  
+    
+      <body>
+    
+  
+      <div id="container" class="container">
+        <article id="post-2016-01-28-Cocoa-Architecture-Dropped-Design-Patterns" class="article article-type-post" itemscope itemprop="blogPost">
+  <header id="header" class="header">
+    <div class="mobile-nav">
+      <h1 class="nickname">Nathanwhy</h1>
+      <a id="menu">
+        &#9776; Menu
+      </a>
+    </div>
+    
+        <nav id="main-nav" class="main-nav nav-left">
+    
+    
+      <a class="main-nav-link" href="/">Home</a>
+    
+      <a class="main-nav-link" href="/archives">Archives</a>
+    
+      <a class="main-nav-link" href="/about">About</a>
+    
+  </nav>
+</header>
+
+  <hr/>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Artsy 工程师总结的一些 Cocoa 开发设计误区
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry typo" itemprop="articleBody">
+      
+        <p>这是给稀土掘金的一篇译文，原文出自 <a href="http://artsy.github.io/blog/2015/09/01/Cocoa-Architecture-Dropped-Design-Patterns/" target="_blank" rel="noopener">Author: orta - Artsy Engineering</a>，感谢 <a href="https://github.com/walkingway" target="_blank" rel="noopener">walkingway</a>、<a href="https://github.com/iThreeKing" target="_blank" rel="noopener">iThreeKing</a> 校稿。</p>
+<p>在开发 Artsy 这款 iOS app 的时候，我们尝试了一些设计模式。现在我想要谈谈现在我们有的和已经被移除的设计模式。我不会面面俱到，毕竟已经历了那么长时间，有那么多人参与过。我想从更高的层面去审视，关注那些总体上更重要的东西。</p>
+<p>很重要的一点需要先声明下，我不相信有完美的代码，或者说我喜欢重写代码。我们可以发现一个坏的模式而什么都不做。毕竟我们有 app 需要完成，而不可能纯粹为了技术，追求更完美的代码库。</p>
+<h2 id="用-NSNotification-解耦"><a href="#用-NSNotification-解耦" class="headerlink" title="用 NSNotification 解耦"></a>用 NSNotification 解耦</h2><p>大量 Energy 的初始代码库依靠 <code>NSNotification</code> 在应用程序内传递信息。这些通知用于用户设置调整，下载状态更新，授权与相应的错误状态，以及一些 app 特性。这些 Energy 代码太过于依赖这些全局通知进行交流，而鲜有尝试去窥探对象之间的关系。</p>
+<p><code>NSNotificationCenter</code> 的通知在 Cocoa 是一种<a href="https://en.wikipedia.org/wiki/Observer_pattern" target="_blank" rel="noopener">观察者模式</a>的实现。 他们是初学者到中级程序员设计范式的梦想。它提供一种解耦的方式让对象相互发送消息。这对于刚入门的 iOS 开发者来说很容易上手。</p>
+<p>使用 <code>NSNotification</code> 最大的弊端在于容易使得开发者变懒。它允许你不去深究对象之间的关系，假装它们是松耦合的。而实际当他们是耦合的时候，却通过字符串形式的通知传递消息。</p>
+<p>松耦合（Loose-coupling）有它的作用，但是一不小心容易存在多个对象都去监听通知。<a href="http://stackoverflow.com/questions/tagged/nsnotification" target="_blank" rel="noopener">学会</a>注销通知也是一个棘手的问题，这与我们熟悉的默认内存管理行为不同（<a href="https://developer.apple.com/library/prerelease/mac/releasenotes/Foundation/RN-Foundation/index.html#//apple_ref/doc/uid/TP30000742" target="_blank" rel="noopener">了解更多</a>）。</p>
+<p>我们在 Energy 还是存在<a href="https://github.com/artsy/energy/blob/702036664a087db218d3aece8ddddb2441f931c8/Classes/Constants/ARNotifications.h" target="_blank" rel="noopener">大量的通知</a>，而在 Eigen 和 Eidolon 几乎没有。我们甚至没有一个具体的文件来储存常量。</p>
+<h2 id="define-kARConstant"><a href="#define-kARConstant" class="headerlink" title="#define kARConstant"></a>#define kARConstant</h2><p>这里不用多说，当我学习 Objective-C 的时候，确实<a href="https://github.com/adium/adium/blob/master/Source/AdiumAccounts.m#L24-L30" target="_blank" rel="noopener">喜欢</a>使用 <code>#defines</code> 声明常量。就像 C 语言里面的 throw back。使用 <code>#defines</code> 声明常量并不会消耗设备内存来储存常量。这是因为 <code>#defines</code> 在预编译阶段直接将源代码替换为值，而使用静态常量会消耗设备的内存空间。我们以前对此很在意。但很可能是现代版本的 LLVM 在需要时才分配设备内存，特别是那些被标记为 const 的。转化为真实变量意味着你可以在调试模式下检查和使用，同时更好地依赖类型系统。</p>
+<p>说了这么多，其实就是当我们<a href="https://github.com/artsy/eigen/blob/master/Artsy/Views/Table_View_Cells/AdminTableView/ARAnimatedTickView.m#L3" target="_blank" rel="noopener">写</a>: <code>#define TICK_DIMENSION 32</code> 的时候，应该<a href="https://github.com/artsy/eigen/blob/master/Artsy/View_Controllers/App_Navigation/ARAppSearchViewController.m#L11" target="_blank" rel="noopener">改成</a> <code>static const NSInteger ARTickViewDimensionSize = 20;</code>。</p>
+<h2 id="撒点分析（Sprinkling-Analytics）"><a href="#撒点分析（Sprinkling-Analytics）" class="headerlink" title="撒点分析（Sprinkling Analytics）"></a>撒点分析（Sprinkling Analytics）</h2><p>在<a href="https://cocoapods.org/pods/ARAnalytics#user-content-aspect-oriented-dsl" target="_blank" rel="noopener">统计分析</a>中，我们采用<a href="http://albertodebortoli.github.io/blog/2014/03/25/an-aspect-oriented-approach-programming-to-ios-analytics/" target="_blank" rel="noopener">面向切面编程AOP</a>的思想。</p>
+<p>过去代码是<a href="https://github.com/artsy/energy/blob/master/Classes/Controllers/Popovers/Add%20to%20Album/ARAddToAlbumViewController.m#L271-L282" target="_blank" rel="noopener">这样</a>:</p>
+<figure class="highlight objc"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">@implementation</span> <span class="title">ARAddToAlbumViewController</span></span></span><br><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)tableView:(<span class="built_in">UITableView</span> *)tableView didSelectRowAtIndexPath:(<span class="built_in">NSIndexPath</span> *)indexPath</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (indexPath.row &lt; [<span class="keyword">self</span>.albums count]) &#123;</span><br><span class="line">        Album *selectedAlbum = ((Album *)<span class="keyword">self</span>.albums[indexPath.row]);</span><br><span class="line">        ARTickedTableViewCell *cell = (ARTickedTableViewCell *)[<span class="keyword">self</span>.tableView cellForRowAtIndexPath:indexPath];</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> ([cell isSelected]) &#123;</span><br><span class="line">            [ARAnalytics event:ARRemoveFromAlbumEvent withProperties:@&#123;</span><br><span class="line">                <span class="string">@"artworks"</span> : @(<span class="keyword">self</span>.artworks.count),</span><br><span class="line">                <span class="string">@"from"</span> : [ARNavigationController pageID]</span><br><span class="line">            &#125;];</span><br><span class="line">            [...]</span><br></pre></td></tr></table></figure>
+<p>现在是<a href="https://github.com/artsy/eigen/blob/master/Artsy/App/ARAppDelegate+Analytics.m#L69" target="_blank" rel="noopener">这样</a>：</p>
+<figure class="highlight objc"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">@implementation</span> <span class="title">ARAppDelegate</span> (<span class="title">Analytics</span>)</span></span><br><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)setupAnalytics</span><br><span class="line">&#123;</span><br><span class="line">    ArtsyKeys *keys = [[ArtsyKeys alloc] init];</span><br><span class="line">  [...]</span><br><span class="line">    [ARAnalytics setupWithAnalytics: @&#123; [...] &#125; configuration:</span><br><span class="line">    @&#123;</span><br><span class="line">        ARAnalyticsTrackedEvents:</span><br><span class="line">            @[</span><br><span class="line">                @&#123;</span><br><span class="line">                    ARAnalyticsClass: ARAddToAlbumViewController.class,</span><br><span class="line">                    ARAnalyticsDetails: @[</span><br><span class="line">                        @&#123;</span><br><span class="line">                            ARAnalyticsEventName: ARRemoveFromAlbumEvent,</span><br><span class="line">                            ARAnalyticsSelectorName: <span class="built_in">NSStringFromSelector</span>(<span class="keyword">@selector</span>(tableView: didSelectRowAtIndexPath:)),</span><br><span class="line">                            ARAnalyticsProperties: ^<span class="built_in">NSDictionary</span>*(ARAddToAlbumViewController *controller, <span class="built_in">NSArray</span> *_) &#123;</span><br><span class="line">                                <span class="keyword">return</span> @&#123;</span><br><span class="line">                                    <span class="string">@"artworks"</span> : @(controller.artworks.count),</span><br><span class="line">                                    <span class="string">@"from"</span> : [ARNavigationController pageID],</span><br><span class="line">                                &#125;;</span><br><span class="line">                        &#125;,</span><br><span class="line">                        [...]</span><br><span class="line">                    ]</span><br><span class="line">                &#125;,</span><br><span class="line">              [...]</span><br></pre></td></tr></table></figure>
+<p>这样就不会把统计代码分散到各个文件中，让每个对象的职责变得单一，这也是我们在 Eigen 中的实现。但我们并未移植到 Energy 中，因为它的依赖库 ReactiveCocoa 过于庞大。目前我们一直以内联的方式进行统计，因为 Energy 只有很少地方需要单独进行统计。如果你想要了解更多这个模式，请查看<a href="http://artsy.github.io/blog/2014/08/04/aspect-oriented-programming-and-aranalytics/" target="_blank" rel="noopener">面向切面编程与 ARAnalytics</a>。</p>
+<h2 id="把类方法当做全局-API"><a href="#把类方法当做全局-API" class="headerlink" title="把类方法当做全局 API"></a>把类方法当做全局 API</h2><p>很长一段时间，我更喜欢基于类的 API 美学。比如使用类方法而不是实例方法。我一直是这么做。然而，一旦你开始给项目添加测试，这就会产生一些问题。</p>
+<p>我热衷于在测试内应用依赖注入的思想。这个有点复杂，简要来说，就是传入一个额外的上下文，而不是一个对象自己找到上下文。常见的例子就是 <code>NSUserDefaults</code>。你的类可能并不需要知道你使用的是哪个 <code>NSUserDefault</code> 对象，而是你调用的方法在决定，比如 <code>[[NSUserDefaults standardUserDefaults] setObject:reminderID forKey:@&quot;ARReminderID&quot;];</code>。使用依赖注入将允许通过方法从外部传入对象。如果你想更深入了解这块，可以看看 <a href="http://qualitycoding.org/about/" target="_blank" rel="noopener">Jon Reid</a> 这篇  <a href="https://www.objc.io/issues/15-testing/dependency-injection/" target="_blank" rel="noopener">objc.io</a> <a href="http://objccn.io/issue-15-3/" target="_blank" rel="noopener">译文：依赖注入</a>。</p>
+<p>基于类的 API，它的问题在于变得很难注入对象。这不利于写出简洁快速的测试。你可以使用一个模拟（mocking）库来伪造类 API，但这感觉很奇怪。模拟（mocking）应该被用于你不控制的事物。如果你正在写 API，那么你就控制了这个对象。拥有一个实例对象意味着可以给不同的版本提供不同行为和值，如果你可以通过 <a href="https://github.com/artsy/eigen/blob/e19ac594bf6240d076e8092d9c56e9876c94444e/Artsy/Networking/Network_Models/ARArtistNetworkModel.h" target="_blank" rel="noopener">协议（protocol）</a> 减少实例上的行为，那会更好。</p>
+<h2 id="对象隐匿地联网"><a href="#对象隐匿地联网" class="headerlink" title="对象隐匿地联网"></a>对象隐匿地联网</h2><p>当你有一个复杂的应用，会有很多地方可以执行网络操作。我们在模型，视图控制器和视图都有过网络操作。基本上把纯粹的 MVC 模式给抛弃了。我们开始意识到 eigen 的设计模式，因为它以前的网络层并未抽象出来。如果你想要看到完整内容，请查看 <a href="https://github.com/Moya/Moya" target="_blank" rel="noopener">moya/Moya README</a>。</p>
+<p>我们企图通过构建不同类型的网络客户端来尝试修复这种模式，这客户端就是我所刚提到的 <a href="https://github.com/Moya/Moya" target="_blank" rel="noopener">Moya</a>。</p>
+<p>另一方面，是将网络层抽象成一个独立的对象。如果你听过 Model-View-ViewModel (<a href="http://www.teehanlax.com/blog/model-view-viewmodel-for-ios/" target="_blank" rel="noopener">MVVM</a>)，这很相似，只是视图（View）换成网络操作。网络操作模型给我们提供了一个方法来将网络操作抽象成一系列行为。额外的抽象意味着“我想要关于 x 的东西，而不是发送一个 GET 给 x 地址，并且变成 y”。</p>
+<p>网络模型也使得在测试中交换行为变得极为容易。在 eigen，我们拥有异步网络，能<a href="https://github.com/artsy/eigen/pull/575" target="_blank" rel="noopener">在测试中同步运行</a>，但我们还是一直使用网络模型，从而可以在测试中提供<a href="https://github.com/artsy/eigen/blob/master/Artsy_Tests/View_Controller_Tests/Artist/ARArtistViewControllerTests.m#L29-L40" target="_blank" rel="noopener">我们期望服务端返回的数据</a> 。</p>
+<h2 id="子类化超过两次"><a href="#子类化超过两次" class="headerlink" title="子类化超过两次"></a>子类化超过两次</h2><p>为了提供一个类似但有点不同的行为，通过子类化是非常简单的。可能你需要<a href="https://github.com/artsy/eigen/blob/e19ac594bf6240d076e8092d9c56e9876c94444e/Artsy/View_Controllers/Web_Browsing/ARTopMenuInternalMobileWebViewController.m#L58" target="_blank" rel="noopener">重写某个方法</a>，或者添加一个<a href="https://github.com/artsy/eigen/blob/e19ac594bf6240d076e8092d9c56e9876c94444e/Artsy/View_Controllers/Web_Browsing/AREndOfLineInternalMobileWebViewController.h#L5" target="_blank" rel="noopener">特殊的行为</a>。但就像<a href="http://ezinearticles.com/?The-Boiled-Frog-Phenomenon&amp;id=932310" target="_blank" rel="noopener">温水煮青蛙</a>的故事，随着层级结构加深，期望的行为被改变，最终你将获得难以理解的代码库。</p>
+<p>处理这种情况的一种模式是<a href="http://stackoverflow.com/questions/9710411/ios-grasping-composition" target="_blank" rel="noopener">类组件</a>。其思想是通过多个对象一起工作来取代一个对象处理多个事情。给每个对象提供更多的空间来遵循单一职责原则<a href="https://en.wikipedia.org/wiki/Single_responsibility_principle" target="_blank" rel="noopener">（SRP）</a>。如果你对这有兴趣，你可能也会对<a href="https://developer.apple.com/library/ios/documentation/General/Conceptual/CocoaEncyclopedia/ClassClusters/ClassClusters.html" target="_blank" rel="noopener">类簇</a>模式感兴趣。</p>
+<p>举一个来自 Energy 的好例子，我们的根视图控制器 <code>ARTopViewController</code> 过去常常控制自己的工具栏项目（toolbar items）。经过四年的时间这变得难以管理，在视图控制器有大量的额外代码。通过抽取控制工具栏项目（toolbar items）的实现细节到他们自己的类，从而让 <code>ARTopViewController</code> 展示自己想要做的而不是怎么做的。</p>
+<h2 id="通过类间通信配置类"><a href="#通过类间通信配置类" class="headerlink" title="通过类间通信配置类"></a>通过类间通信配置类</h2><p>Energy 最重要的一部分就是 <a href="http://folio.artsy.net/" target="_blank" rel="noopener">email artworks</a>。配置你想要发送的邮件，然后根据设置生成 HTML，因此这会产生大量的代码。起初很简单，因为我们只有很少的应用设置。随着时间的推移，依据设置和它们如何影响邮件内容决定我们需要显示什么，这会变得很复杂。</p>
+<p>视图控制器里允许小伙伴选择各自想要传递给对象的细节，然后生成 HTML，这部分最终变得具有很强的代码异味，让你想要重写。我发现想要给类的行为写个简单的测试是很困难的。一开始我要模拟（mock） email 组件，然后检查我所调用的方法。这感觉是错的，因为你不应该模拟（mock）你自己的类。类提供了重要的功能，对于如何改进这部分代码，我想了很久。</p>
+<p>问题的解决灵感来自 Justin Searls 演说，<a href="https://speakerdeck.com/searls/sometimes-a-controller-is-just-a-controller" target="_blank" rel="noopener">“有时控制器只是控制器”</a>，特别是第<a href="https://speakerdeck.com/searls/sometimes-a-controller-is-just-a-controller?slide=55" target="_blank" rel="noopener">55</a>张 PPT。他谈到对象，要么持有并描述一个值，要么执行一个有用的行为，绝不要两者都有。</p>
+<p>我采纳了这个建议，重新评估了设置控制器和组件对象之间的关系。在改动之前，设置控制器会直接配置组件。现在，设置控制器创建了一个配置对象，供组件使用。这就使得给两个对象写测试变得极其简单，因为他们都有很明显的输入和输出，其格式是 <a href="https://github.com/artsy/energy/blob/aa97d90cf37932d4c0f49ea4c4d31f7e491f16a6/Classes/Util/Emails/AREmailSettings.h" target="_blank" rel="noopener">AREmailSettings</a>。<a href="https://github.com/artsy/energy/blob/aa97d90cf37932d4c0f49ea4c4d31f7e491f16a6/ArtsyFolio%20Tests/Util/AREmailComposerTests.m" target="_blank" rel="noopener">AREmailComposerTests</a> 也变得非常优雅。</p>
+<h3 id="直接使用响应链"><a href="#直接使用响应链" class="headerlink" title="直接使用响应链"></a>直接使用响应链</h3><p>在我去 Artsy 工作之前，我是一名 <a href="http://i.imgur.com/Am9LjED.gif" target="_blank" rel="noopener">Mac 开发者</a>，在 iOS 存在之前就一直是，所以这也影响了我的代码风格。Cocoa 工具链最主要的部分之一是<a href="https://developer.apple.com/library/ios/documentation/EventHandling/Conceptual/EventHandlingiPhoneOS/event_delivery_responder_chain/event_delivery_responder_chain.html" target="_blank" rel="noopener">响应链</a>，一个很好的记录方法传递一个已知的对象链。它解决了复杂视图结构的常见问题。你可以通过运行时，在很深的视图层级生成一个按钮，然后当它被点击时被视图控制器接收处理。你可以使用很长的代理方法链，或者使用<a href="https://twitter.com/unimp0rtanttech/status/555828778015129600" target="_blank" rel="noopener">私有方法</a>获得视图控制器实例的引用。在 Mac 开发，使用响应链是一种常见的模式，在 iOS 就使用得很少。</p>
+<p>我们在 Eigen 的视图控制器也有这种问题。有一些按钮在很深的视图层级，需要将信息传递到视图控制器。当我们第一次碰到这种问题，立即使用了响应链，你写了<a href="https://github.com/artsy/eigen/blob/e19ac594bf6240d076e8092d9c56e9876c94444e/Artsy/Views/Artwork/ARArtworkActionsView.m#L85" target="_blank" rel="noopener">几行代码</a>类似：<code>[bidButton addTarget:self action:@selector(tappedBidButton:) forControlEvents:UIControlEventTouchUpInside];</code>，其中 self 指向视图。这会向上传递信息 <code>tappedBidButton:</code> ，直到被  <a href="https://github.com/artsy/eigen/blob/e19ac594bf6240d076e8092d9c56e9876c94444e/Artsy/View_Controllers/Artwork/ARArtworkViewController+ButtonActions.m#L114" target="_blank" rel="noopener">ARArtworkViewController</a> 响应。</p>
+<p>我必须解释，响应链的前提是大多数人接触这块代码区域。在 <a href="https://xkcd.com/1053/" target="_blank" rel="noopener">“lucky 10,000”</a> 这是可行的，但意味着这模式对于之前没听说过的人并不直观。还有一个的问题，缺乏耦合意味着通过重构重命名 selector 会打破响应链条。</p>
+<p>减少认知负担的方式是通过协议，所有响应链将会使用的动作都会通过类似 <a href="https://github.com/artsy/eigen/blob/e19ac594bf6240d076e8092d9c56e9876c94444e/Artsy/Views/Artwork/ARArtworkActionsView.h#L10-L20" target="_blank" rel="noopener">ARArtworkActionsViewButtonDelegate</a> 的协议映射。这有点善意谎言的意味，没有通过直接的关系来使用协议，但是它使得关系更加明显。我们使用类拓展（class extension）来<a href="https://github.com/artsy/eigen/blob/e19ac594bf6240d076e8092d9c56e9876c94444e/Artsy/View_Controllers/Artwork/ARArtworkViewController+ButtonActions.h#L11" target="_blank" rel="noopener">遵守这些类型的协议</a>，从而保持所有动作都在同一个地方。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>设计模式有很多，而它们全都来源于权衡。随着时间的推移，我们对于什么是“好的代码”的标准会变，这是好事。重要的是，作为开发者，我们明白，能改变我们思想的，才是我们工具链中最必不可少的技能之一。这意味着你要走出自己原本的认知范围，乐于接受那些外来的信息，或许，你会从中获得一些很不错的点子。对于创造应用持有热情是好的，不过我想，最好的程序员选择实用主义而不是理想主义。</p>
+
+      
+      
+    </div>
+    <footer class="article-footer">
+      <ul class="article-meta">
+        <li>
+          <span class="label">Published Date:</span>
+          <a href="/2016/01/28/2016-01-28-Cocoa-Architecture-Dropped-Design-Patterns/" class="article-date">
+  <time datetime="2016-01-28T03:55:00.000Z" itemprop="datePublished">2016-01-28</time>
+</a>
+
+        </li>
+        
+        
+          <li>
+            <span class="label">Tag:</span>
+            
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/iOS/">iOS</a></li></ul>
+
+
+          </li>
+        
+        <hr/>
+      </ul>
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav" class="article-nav">
+  
+    <a href="/2016/03/06/2016-03-06-iOS-Theme-manager/" id="article-nav-newer" class="article-nav-link-wrap newer">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          iOS 主题换肤杂谈
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2016/01/03/2016-01-03-User-Breakpoint/" id="article-nav-older" class="article-nav-link-wrap older">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">User Breakpoint</div>
+    </a>
+  
+</nav>
+
+
+  
+</article>
+
+
+
+
+
+
+
+
+
+
+      </div>
+      
+    <footer id="footer" class="post-footer footer">
+      
+      <hr/>
+      <div id="footerContent" class="footer-content">
+        <p>Nathanwhy</p>
+
+
+      </div>
+    </footer>
+
+      
+
+
+
+
+
+
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/typing.js"></script>
+<!--[if lt IE 9]><script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7/html5shiv.min.js"></script><![endif]-->
+
+
+
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-60259195-2', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+
+
+
+    </div>
+  </body>
+</html>

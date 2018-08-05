@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  
+  <title>HTTPS 中的密码技术 | Nathanwhy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="HTTP 是我们平时浏览网页时候使用的一种协议。HTTP 协议传输的数据都是明文未加密的，因此使用 HTTP 协议传输隐私信息非常不安全。为了保证这些隐私数据能加密传输，网景公司设计了 SSL（Secure Sockets Layer）协议用于对 HTTP 协议传输的数据进行加密，从而就诞生了 HTTPS。其目前的版本是 3.0，被 IETF 定义在 RFC 6101 中，之后 IETF 对 SS">
+<meta name="keywords" content="network">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HTTPS 中的密码技术">
+<meta property="og:url" content="https://nathanwhy.com/2017/04/16/2017-04-16-HTTPS/index.html">
+<meta property="og:site_name" content="Nathanwhy">
+<meta property="og:description" content="HTTP 是我们平时浏览网页时候使用的一种协议。HTTP 协议传输的数据都是明文未加密的，因此使用 HTTP 协议传输隐私信息非常不安全。为了保证这些隐私数据能加密传输，网景公司设计了 SSL（Secure Sockets Layer）协议用于对 HTTP 协议传输的数据进行加密，从而就诞生了 HTTPS。其目前的版本是 3.0，被 IETF 定义在 RFC 6101 中，之后 IETF 对 SS">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2017-04-16T13:19:40.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="HTTPS 中的密码技术">
+<meta name="twitter:description" content="HTTP 是我们平时浏览网页时候使用的一种协议。HTTP 协议传输的数据都是明文未加密的，因此使用 HTTP 协议传输隐私信息非常不安全。为了保证这些隐私数据能加密传输，网景公司设计了 SSL（Secure Sockets Layer）协议用于对 HTTP 协议传输的数据进行加密，从而就诞生了 HTTPS。其目前的版本是 3.0，被 IETF 定义在 RFC 6101 中，之后 IETF 对 SS">
+<meta name="twitter:creator" content="@nathanwhy">
+  
+  
+    <link rel="icon" href="images/favicon.ico">
+  
+  <link rel="stylesheet" href="/css/typing.css">
+  <link rel="stylesheet" href="/css/donate.css">
+  
+</head>
+
+  
+    
+      <body>
+    
+  
+      <div id="container" class="container">
+        <article id="post-2017-04-16-HTTPS" class="article article-type-post" itemscope itemprop="blogPost">
+  <header id="header" class="header">
+    <div class="mobile-nav">
+      <h1 class="nickname">Nathanwhy</h1>
+      <a id="menu">
+        &#9776; Menu
+      </a>
+    </div>
+    
+        <nav id="main-nav" class="main-nav nav-left">
+    
+    
+      <a class="main-nav-link" href="/">Home</a>
+    
+      <a class="main-nav-link" href="/archives">Archives</a>
+    
+      <a class="main-nav-link" href="/about">About</a>
+    
+  </nav>
+</header>
+
+  <hr/>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      HTTPS 中的密码技术
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry typo" itemprop="articleBody">
+      
+        <p>HTTP 是我们平时浏览网页时候使用的一种协议。HTTP 协议传输的数据都是明文未加密的，因此使用 HTTP 协议传输隐私信息非常不安全。<br>为了保证这些隐私数据能加密传输，网景公司设计了 SSL（Secure Sockets Layer）协议用于对 HTTP 协议传输的数据进行加密，从而就诞生了 HTTPS。<br>其目前的版本是 3.0，被 IETF 定义在 RFC 6101 中，之后 IETF 对 SSL 3.0 进行了升级，于是出现了 TLS（Transport Layer Security）。<br>SSL/TLS 中综合运用了对称密码、消息认证码、公钥密码、数字签名、伪随机数生成器等密码技术。</p>
+<p>简单来说 HTTPS 就是在应用层（HTTP）和传输层（TCP）中加了一层 SSL/TLS。</p>
+<p>至于是如何进行数据加密的，先来看看原来的传输协议面临的问题：</p>
+<ol>
+<li>传输的内容在发送过程中不能被篡改；</li>
+<li>传输的内容在发送过程中不能被窃听；</li>
+<li>确认通信对方是否为真正的要传输的对象。</li>
+</ol>
+<h3 id="防止篡改"><a href="#防止篡改" class="headerlink" title="防止篡改"></a>防止篡改</h3><p>要防止被篡改，可以使用 hash 函数来实现。比如 SHA-256，MD5，又或者 HMAC。<br>发送者与接受者预先共享一串密钥，加上任意长度的消息进行 Hash 计算。<br>通过这种方式来确认消息的完整性，这种方式称为消息认证码。</p>
+<p>但是 Hash 函数有个问题，无法防止重放攻击。<br>比如小明用手机向你转账 1 万，这时候你拦截了请求，并重复发送。<br>虽然你看不懂请求的内容，但是对于银行来说这是合法的请求。<br>这解决这种方法，接收者需要先向发送者发送一个一次性的随机数，一般称为 nonce。<br>发送者在消息中包含这个 nonce，并计算 hash 值。</p>
+<p>但如何事先将这共享密钥发送出去呢？</p>
+<h3 id="防止窃听"><a href="#防止窃听" class="headerlink" title="防止窃听"></a>防止窃听</h3><p>要防止窃听，可以使用对称密码。使用随机数生成器来生成密钥。然后使用公钥来发送给通信对象。<br>一般情况下是服务端下发公钥给客户端，客户端使用公钥对消息内容进行加密，在返回给服务端。<br>服务端用自己的私钥进行解密。这就是所谓的 RSA 非对称加密。</p>
+<p>RSA 性能非常低，原因在于寻找大素数、大数计算、数据分割需要耗费很多的 CPU 周期，所以一般的 HTTPS 连接只在第一次握手时使用非对称加密，通过握手交换对称加密密钥，在之后的通信走对称加密（AES）。</p>
+<p>但是对于客户端，如何确定这公钥的来源是正确的呢？这就涉及常见的中间人攻击。</p>
+<h3 id="对象认证"><a href="#对象认证" class="headerlink" title="对象认证"></a>对象认证</h3><p>要确认这个公钥的合法性，我们需要一个第三方机构来进行认证。<br>第三方先对公钥加上数字签名，也就是生成证书。</p>
+<p>那什么是数字签名？<br>数字签名相当于公钥密码的逆过程。先用私钥对消息内容进行加密生成签名，公钥揭秘来验证签名。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>服务端下发包含公钥的证书给客户端，客户端向第三方来验证证书中的数字签名。<br>如果证书合法，客户端产生一段随机数，这个随机数就作为通信的密钥（对称密钥），用公钥加密这段随机数，然后发送到服务器<br>服务器用密钥解密获取对称密钥，然后，双方就已对称密钥进行加密解密通信了。<br>这样我们所说的三个问题就一一解决了。实际中的 HTTPS 过程会更琐碎一些。</p>
+<h2 id="最后"><a href="#最后" class="headerlink" title="最后"></a>最后</h2><p>最后有人可能想问，如何确定第三方认证机构的合法性？这个问题貌似又回到了对象认证的起点。<br>如果能确认公钥的合法性，确实不需要第三方认证机构。比如 12306。<br>但如果不能十分确认公钥的合法性，有个比较相信的第三方认证机构进行确认的情况下，可信度是不是更高？</p>
+<p>参考资料：<br><a href="http://www.guokr.com/post/114121/" target="_blank" rel="noopener">HTTPS那些事（一）HTTPS原理</a></p>
+
+      
+      
+    </div>
+    <footer class="article-footer">
+      <ul class="article-meta">
+        <li>
+          <span class="label">Published Date:</span>
+          <a href="/2017/04/16/2017-04-16-HTTPS/" class="article-date">
+  <time datetime="2017-04-16T08:00:00.000Z" itemprop="datePublished">2017-04-16</time>
+</a>
+
+        </li>
+        
+        
+          <li>
+            <span class="label">Tag:</span>
+            
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/network/">network</a></li></ul>
+
+
+          </li>
+        
+        <hr/>
+      </ul>
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav" class="article-nav">
+  
+    <a href="/2017/12/04/2017-12-04-clear-app-badge-number/" id="article-nav-newer" class="article-nav-link-wrap newer">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Best practice to clear application badges
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2016/10/13/2016-10-13-HubFramewrok/" id="article-nav-older" class="article-nav-link-wrap older">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">HubFramework 的组件化实现</div>
+    </a>
+  
+</nav>
+
+
+  
+</article>
+
+
+
+
+
+
+
+
+
+
+      </div>
+      
+    <footer id="footer" class="post-footer footer">
+      
+      <hr/>
+      <div id="footerContent" class="footer-content">
+        <p>Nathanwhy</p>
+
+
+      </div>
+    </footer>
+
+      
+
+
+
+
+
+
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/typing.js"></script>
+<!--[if lt IE 9]><script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7/html5shiv.min.js"></script><![endif]-->
+
+
+
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-60259195-2', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+
+
+
+    </div>
+  </body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  
+  <title>Hexo | Nathanwhy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="刚迁移到 Hexo，遇到了一些坑，在这里记录下。 常见命令新建文章$ hexo new &quot;My New Post&quot; More info: Writing 启动 Server$ hexo server More info: Server 生成静态文件$ hexo generate More info: Generating 部署$ hexo deploy More info: Deployment">
+<meta name="keywords" content="other">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="https://nathanwhy.com/2015/04/26/2015-04-26-hexo/index.html">
+<meta property="og:site_name" content="Nathanwhy">
+<meta property="og:description" content="刚迁移到 Hexo，遇到了一些坑，在这里记录下。 常见命令新建文章$ hexo new &quot;My New Post&quot; More info: Writing 启动 Server$ hexo server More info: Server 生成静态文件$ hexo generate More info: Generating 部署$ hexo deploy More info: Deployment">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2015-07-05T02:16:41.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Hexo">
+<meta name="twitter:description" content="刚迁移到 Hexo，遇到了一些坑，在这里记录下。 常见命令新建文章$ hexo new &quot;My New Post&quot; More info: Writing 启动 Server$ hexo server More info: Server 生成静态文件$ hexo generate More info: Generating 部署$ hexo deploy More info: Deployment">
+<meta name="twitter:creator" content="@nathanwhy">
+  
+  
+    <link rel="icon" href="images/favicon.ico">
+  
+  <link rel="stylesheet" href="/css/typing.css">
+  <link rel="stylesheet" href="/css/donate.css">
+  
+</head>
+
+  
+    
+      <body>
+    
+  
+      <div id="container" class="container">
+        <article id="post-2015-04-26-hexo" class="article article-type-post" itemscope itemprop="blogPost">
+  <header id="header" class="header">
+    <div class="mobile-nav">
+      <h1 class="nickname">Nathanwhy</h1>
+      <a id="menu">
+        &#9776; Menu
+      </a>
+    </div>
+    
+        <nav id="main-nav" class="main-nav nav-left">
+    
+    
+      <a class="main-nav-link" href="/">Home</a>
+    
+      <a class="main-nav-link" href="/archives">Archives</a>
+    
+      <a class="main-nav-link" href="/about">About</a>
+    
+  </nav>
+</header>
+
+  <hr/>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Hexo
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry typo" itemprop="articleBody">
+      
+        <p>刚迁移到 Hexo，遇到了一些坑，在这里记录下。</p>
+<h2 id="常见命令"><a href="#常见命令" class="headerlink" title="常见命令"></a>常见命令</h2><h4 id="新建文章"><a href="#新建文章" class="headerlink" title="新建文章"></a>新建文章</h4><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
+<p>More info: <a href="http://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
+<h4 id="启动-Server"><a href="#启动-Server" class="headerlink" title="启动 Server"></a>启动 Server</h4><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+<p>More info: <a href="http://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
+<h4 id="生成静态文件"><a href="#生成静态文件" class="headerlink" title="生成静态文件"></a>生成静态文件</h4><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+<p>More info: <a href="http://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
+<h4 id="部署"><a href="#部署" class="headerlink" title="部署"></a>部署</h4><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+<p>More info: <a href="http://hexo.io/docs/deployment.html" target="_blank" rel="noopener">Deployment</a></p>
+<h4 id="分别可以简化为"><a href="#分别可以简化为" class="headerlink" title="分别可以简化为"></a>分别可以简化为</h4><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ hexo n “My New Post”</span><br><span class="line">$ hexo s</span><br><span class="line">$ hexo g</span><br><span class="line">$ hexo d</span><br></pre></td></tr></table></figure>
+<p>##遇到问题</p>
+<h4 id="hexo-deploy-没有反应"><a href="#hexo-deploy-没有反应" class="headerlink" title="hexo deploy 没有反应"></a><code>hexo deploy</code> 没有反应</h4><ul>
+<li>先配置 <code>_config.yml</code></li>
+<li>安装 hexo-deployer-git</li>
+</ul>
+<p>具体参考<a href="http://hexo.io/zh-cn/docs" target="_blank" rel="noopener">文档</a></p>
+<h4 id="主题的字体和-JS-库优化"><a href="#主题的字体和-JS-库优化" class="headerlink" title="主题的字体和 JS 库优化"></a>主题的字体和 JS 库优化</h4><p>我选择的那个主题，在 Safari 和 Chrome 的英文显示就不一致，一个是粗体，一个是细的。另外，Hexo 博客系统使用了 Google 的字体和 JavaScript 库，不仅影响了速度，也影响了字体效果。</p>
+<p>具体参考<a href="http://kuangqi.me/tricks/hexo-optimizations-for-mainland-china/" target="_blank" rel="noopener">这里</a>，虽然主题不太一样，但是解决原理差不多。</p>
+
+      
+      
+    </div>
+    <footer class="article-footer">
+      <ul class="article-meta">
+        <li>
+          <span class="label">Published Date:</span>
+          <a href="/2015/04/26/2015-04-26-hexo/" class="article-date">
+  <time datetime="2015-04-26T02:15:33.000Z" itemprop="datePublished">2015-04-26</time>
+</a>
+
+        </li>
+        
+        
+          <li>
+            <span class="label">Tag:</span>
+            
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/other/">other</a></li></ul>
+
+
+          </li>
+        
+        <hr/>
+      </ul>
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav" class="article-nav">
+  
+    <a href="/2015/05/11/2015-05-11-Reducing-Dynamic-Dispatch/" id="article-nav-newer" class="article-nav-link-wrap newer">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          通过减少动态派送提升性能
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2015/04/17/2015-04-17-2015年iOS测试现状/" id="article-nav-older" class="article-nav-link-wrap older">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">2015年 iOS 测试现状</div>
+    </a>
+  
+</nav>
+
+
+  
+</article>
+
+
+
+
+
+
+
+
+
+
+      </div>
+      
+    <footer id="footer" class="post-footer footer">
+      
+      <hr/>
+      <div id="footerContent" class="footer-content">
+        <p>Nathanwhy</p>
+
+
+      </div>
+    </footer>
+
+      
+
+
+
+
+
+
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/typing.js"></script>
+<!--[if lt IE 9]><script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7/html5shiv.min.js"></script><![endif]-->
+
+
+
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-60259195-2', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+
+
+
+    </div>
+  </body>
+</html>

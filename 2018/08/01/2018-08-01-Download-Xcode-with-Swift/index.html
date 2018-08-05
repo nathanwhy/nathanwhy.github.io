@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  
+  <title>Download Xcode with Swift | Nathanwhy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="每年开完 WWDC，Xcode beta 通常会每两周更新一次。在天朝，每次下载 Xcode 都需要花费不少时间。 对此我们需要一个下载工具来帮助下载。 比较常用的是 wget wget --tries=inf --server-response --continue --header &amp;quot;Cookie: ADCDownloadAuth=xxxxx” http://adcdownload.">
+<meta name="keywords" content="Swift,iOS">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Download Xcode with Swift">
+<meta property="og:url" content="https://nathanwhy.com/2018/08/01/2018-08-01-Download-Xcode-with-Swift/index.html">
+<meta property="og:site_name" content="Nathanwhy">
+<meta property="og:description" content="每年开完 WWDC，Xcode beta 通常会每两周更新一次。在天朝，每次下载 Xcode 都需要花费不少时间。 对此我们需要一个下载工具来帮助下载。 比较常用的是 wget wget --tries=inf --server-response --continue --header &amp;quot;Cookie: ADCDownloadAuth=xxxxx” http://adcdownload.">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2018-08-05T14:45:14.840Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Download Xcode with Swift">
+<meta name="twitter:description" content="每年开完 WWDC，Xcode beta 通常会每两周更新一次。在天朝，每次下载 Xcode 都需要花费不少时间。 对此我们需要一个下载工具来帮助下载。 比较常用的是 wget wget --tries=inf --server-response --continue --header &amp;quot;Cookie: ADCDownloadAuth=xxxxx” http://adcdownload.">
+<meta name="twitter:creator" content="@nathanwhy">
+  
+  
+    <link rel="icon" href="images/favicon.ico">
+  
+  <link rel="stylesheet" href="/css/typing.css">
+  <link rel="stylesheet" href="/css/donate.css">
+  
+</head>
+
+  
+    
+      <body>
+    
+  
+      <div id="container" class="container">
+        <article id="post-2018-08-01-Download-Xcode-with-Swift" class="article article-type-post" itemscope itemprop="blogPost">
+  <header id="header" class="header">
+    <div class="mobile-nav">
+      <h1 class="nickname">Nathanwhy</h1>
+      <a id="menu">
+        &#9776; Menu
+      </a>
+    </div>
+    
+        <nav id="main-nav" class="main-nav nav-left">
+    
+    
+      <a class="main-nav-link" href="/">Home</a>
+    
+      <a class="main-nav-link" href="/archives">Archives</a>
+    
+      <a class="main-nav-link" href="/about">About</a>
+    
+  </nav>
+</header>
+
+  <hr/>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Download Xcode with Swift
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry typo" itemprop="articleBody">
+      
+        <p>每年开完 WWDC，Xcode beta 通常会每两周更新一次。在天朝，每次下载 Xcode 都需要花费不少时间。</p>
+<p>对此我们需要一个下载工具来帮助下载。</p>
+<p>比较常用的是 wget</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">wget --tries=inf --server-response --continue --header &quot;Cookie: ADCDownloadAuth=xxxxx” http://adcdownload.apple.com/Developer_Tools/Xcode_10_beta_2/Xcode_10_beta_2.xip</span><br></pre></td></tr></table></figure>
+<p>这里的 cookie 需要自己从浏览器中登录获取，只需要截取 ADCDownloadAuth 这块即可。</p>
+<p>回到这次的主题，<br>最近看到不少 Swift 写的命令行工具。</p>
+<p>于是自己写了个 Swift 命令行下载工具 <a href="https://github.com/nathanwhy/buzz" target="_blank" rel="noopener">buzz</a>。<br>功能没有 wget 全，简单地支持了下断点续传和 Cookie，下载 Xcode 是没有问题了。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">buzz --header &quot;Cookie: ADCDownloadAuth=xxxxxx&quot; http://adcdownload.apple.com/Developer_Tools/Xcode_10_beta_2/Xcode_10_beta_2.xip</span><br></pre></td></tr></table></figure>
+<p>下载速度实测和 wget 没太大差别。</p>
+<p>实现方面主要参考了 Onevcat 的 <a href="https://github.com/onevcat/FengNiao" target="_blank" rel="noopener">FengNiao</a> 和这篇<a href="https://www.swiftbysundell.com/posts/building-a-command-line-tool-using-the-swift-package-manager" target="_blank" rel="noopener">教程</a></p>
+<p>比较遗憾的是现在貌似还不支持 Homebrew。</p>
+
+      
+      
+    </div>
+    <footer class="article-footer">
+      <ul class="article-meta">
+        <li>
+          <span class="label">Published Date:</span>
+          <a href="/2018/08/01/2018-08-01-Download-Xcode-with-Swift/" class="article-date">
+  <time datetime="2018-08-01T12:00:00.000Z" itemprop="datePublished">2018-08-01</time>
+</a>
+
+        </li>
+        
+        
+          <li>
+            <span class="label">Tag:</span>
+            
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Swift/">Swift</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/iOS/">iOS</a></li></ul>
+
+
+          </li>
+        
+        <hr/>
+      </ul>
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav" class="article-nav">
+  
+    <span id="article-nav-newer" class="article-nav-link-wrap newer"></span>
+  
+  
+    <a href="/2017/12/04/2017-12-04-clear-app-badge-number/" id="article-nav-older" class="article-nav-link-wrap older">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Best practice to clear application badges</div>
+    </a>
+  
+</nav>
+
+
+  
+</article>
+
+
+
+
+
+
+
+
+
+
+      </div>
+      
+    <footer id="footer" class="post-footer footer">
+      
+      <hr/>
+      <div id="footerContent" class="footer-content">
+        <p>Nathanwhy</p>
+
+
+      </div>
+    </footer>
+
+      
+
+
+
+
+
+
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/typing.js"></script>
+<!--[if lt IE 9]><script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7/html5shiv.min.js"></script><![endif]-->
+
+
+
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-60259195-2', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+
+
+
+    </div>
+  </body>
+</html>

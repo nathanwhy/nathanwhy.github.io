@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  
+  <title>User Breakpoint | Nathanwhy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="今天刚看到这一篇文章 Little things that can make your life easier in 2016，里面提到了之前在 twitter 上热传的打印 frame 小技巧，顺手记录下。 不少人都会使用全局异常断点，殊不知断点还有更有趣的用法。 添加一个 User 模式的断点，那么你打开的任何项目都会包含这个断点，不需要再手动添加一遍。 打印 CGRect比如添加一个 sym">
+<meta name="keywords" content="LLDB">
+<meta property="og:type" content="article">
+<meta property="og:title" content="User Breakpoint">
+<meta property="og:url" content="https://nathanwhy.com/2016/01/03/2016-01-03-User-Breakpoint/index.html">
+<meta property="og:site_name" content="Nathanwhy">
+<meta property="og:description" content="今天刚看到这一篇文章 Little things that can make your life easier in 2016，里面提到了之前在 twitter 上热传的打印 frame 小技巧，顺手记录下。 不少人都会使用全局异常断点，殊不知断点还有更有趣的用法。 添加一个 User 模式的断点，那么你打开的任何项目都会包含这个断点，不需要再手动添加一遍。 打印 CGRect比如添加一个 sym">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://nathanwhy.com/images/post/SymbolicBreakpoint.png">
+<meta property="og:image" content="https://nathanwhy.com/images/post/after_symbols.png">
+<meta property="og:image" content="https://nathanwhy.com/images/post/reveal_breakpoint.png">
+<meta property="og:updated_time" content="2017-04-16T13:22:05.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="User Breakpoint">
+<meta name="twitter:description" content="今天刚看到这一篇文章 Little things that can make your life easier in 2016，里面提到了之前在 twitter 上热传的打印 frame 小技巧，顺手记录下。 不少人都会使用全局异常断点，殊不知断点还有更有趣的用法。 添加一个 User 模式的断点，那么你打开的任何项目都会包含这个断点，不需要再手动添加一遍。 打印 CGRect比如添加一个 sym">
+<meta name="twitter:image" content="https://nathanwhy.com/images/post/SymbolicBreakpoint.png">
+<meta name="twitter:creator" content="@nathanwhy">
+  
+  
+    <link rel="icon" href="images/favicon.ico">
+  
+  <link rel="stylesheet" href="/css/typing.css">
+  <link rel="stylesheet" href="/css/donate.css">
+  
+</head>
+
+  
+    
+      <body>
+    
+  
+      <div id="container" class="container">
+        <article id="post-2016-01-03-User-Breakpoint" class="article article-type-post" itemscope itemprop="blogPost">
+  <header id="header" class="header">
+    <div class="mobile-nav">
+      <h1 class="nickname">Nathanwhy</h1>
+      <a id="menu">
+        &#9776; Menu
+      </a>
+    </div>
+    
+        <nav id="main-nav" class="main-nav nav-left">
+    
+    
+      <a class="main-nav-link" href="/">Home</a>
+    
+      <a class="main-nav-link" href="/archives">Archives</a>
+    
+      <a class="main-nav-link" href="/about">About</a>
+    
+  </nav>
+</header>
+
+  <hr/>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      User Breakpoint
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry typo" itemprop="articleBody">
+      
+        <p>今天刚看到这一篇文章 <a href="http://merowing.info/2015/12/little-things-that-can-make-your-life-easier-in-2016/" target="_blank" rel="noopener">Little things that can make your life easier in 2016</a>，里面提到了之前在 twitter 上热传的打印 frame 小技巧，顺手记录下。</p>
+<p>不少人都会使用全局异常断点，殊不知断点还有更有趣的用法。</p>
+<p>添加一个 User 模式的断点，那么你打开的任何项目都会包含这个断点，不需要再手动添加一遍。</p>
+<h3 id="打印-CGRect"><a href="#打印-CGRect" class="headerlink" title="打印 CGRect"></a>打印 CGRect</h3><p>比如添加一个 symbolic breakpoint，然后切换成 User 模式，在 Symbol 里填上 UIApplicationMain，如下填写信息。</p>
+<p><img src="/images/post/SymbolicBreakpoint.png" alt=""></p>
+<p>这样的话以前不能打印的 CGRect CGSize 都可以被打印出来了。</p>
+<p><img src="/images/post/after_symbols.png" alt=""></p>
+<h3 id="Reveal-的使用"><a href="#Reveal-的使用" class="headerlink" title="Reveal 的使用"></a>Reveal 的使用</h3><p>如何你使用过 Reveal 的话，是不是每次新建一个项目都要加个断点？</p>
+<p>每次都要在 <code>didFinishLaunchingWithOptions</code> 添加断点：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">expr (void*)dlopen(&quot;/Applications/Reveal.app/Contents/SharedSupport/iOS-Libraries/libReveal.dylib&quot;, 0x2);</span><br></pre></td></tr></table></figure>
+<p>经同事提醒，同样也可以添加个 user 模式的 symbolic Breakpoint：</p>
+<p><img src="/images/post/reveal_breakpoint.png" alt=""></p>
+<p>更多有趣的用法：</p>
+<ul>
+<li><a href="https://gist.github.com/krzysztofzablocki/4396302" target="_blank" rel="noopener">Want to log all methods getting called in Objective-C?</a></li>
+<li><a href="https://github.com/itsthejb/.dotfiles/blob/master/lldb/ignore_specified_objc_exceptions.py" target="_blank" rel="noopener">Want to ignore specific exceptions?</a></li>
+<li><a href="https://gist.github.com/Ashton-W/5c1ede17f8cec1f8b529" target="_blank" rel="noopener">Need some other good breakpoints ideas to add?</a></li>
+</ul>
+
+      
+      
+    </div>
+    <footer class="article-footer">
+      <ul class="article-meta">
+        <li>
+          <span class="label">Published Date:</span>
+          <a href="/2016/01/03/2016-01-03-User-Breakpoint/" class="article-date">
+  <time datetime="2016-01-03T03:55:00.000Z" itemprop="datePublished">2016-01-03</time>
+</a>
+
+        </li>
+        
+        
+          <li>
+            <span class="label">Tag:</span>
+            
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LLDB/">LLDB</a></li></ul>
+
+
+          </li>
+        
+        <hr/>
+      </ul>
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav" class="article-nav">
+  
+    <a href="/2016/01/28/2016-01-28-Cocoa-Architecture-Dropped-Design-Patterns/" id="article-nav-newer" class="article-nav-link-wrap newer">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Artsy 工程师总结的一些 Cocoa 开发设计误区
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2015/11/29/2015-11-29-Objection-and-Typhoon-in-Protocol-binds/" id="article-nav-older" class="article-nav-link-wrap older">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Objection 与 Typhoon 的协议绑定对比</div>
+    </a>
+  
+</nav>
+
+
+  
+</article>
+
+
+
+
+
+
+
+
+
+
+      </div>
+      
+    <footer id="footer" class="post-footer footer">
+      
+      <hr/>
+      <div id="footerContent" class="footer-content">
+        <p>Nathanwhy</p>
+
+
+      </div>
+    </footer>
+
+      
+
+
+
+
+
+
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/typing.js"></script>
+<!--[if lt IE 9]><script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7/html5shiv.min.js"></script><![endif]-->
+
+
+
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-60259195-2', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+
+
+
+    </div>
+  </body>
+</html>

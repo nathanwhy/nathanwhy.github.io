@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  
+  <title>ARC 下的循环引用 | Nathanwhy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="本文翻译自 digitalleaves.com，感谢 dopcn 校稿。 ARC 下的循环引用类似于日本的 B 级恐怖片。当你刚成为苹果开发者，你或许不会关心他们的存在。直到某天你的一个 app 因内存泄露而闪退，你才突然意识到他们的存在，并且发现循环引用像幽灵一样存在于代码的各个角落。年复一年，你开始学会如何处理循环引用，检测和避免它们，但是这部片子的恐怖结局还是在那里，随时可能出现。 ARC">
+<meta name="keywords" content="iOS,ARC">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ARC 下的循环引用">
+<meta property="og:url" content="https://nathanwhy.com/2015/05/28/2015-05-28-memory-leak-in-arc/index.html">
+<meta property="og:site_name" content="Nathanwhy">
+<meta property="og:description" content="本文翻译自 digitalleaves.com，感谢 dopcn 校稿。 ARC 下的循环引用类似于日本的 B 级恐怖片。当你刚成为苹果开发者，你或许不会关心他们的存在。直到某天你的一个 app 因内存泄露而闪退，你才突然意识到他们的存在，并且发现循环引用像幽灵一样存在于代码的各个角落。年复一年，你开始学会如何处理循环引用，检测和避免它们，但是这部片子的恐怖结局还是在那里，随时可能出现。 ARC">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://nathanwhy.com/images/post/retainCycle.jpg">
+<meta property="og:image" content="https://nathanwhy.com/images/post/instruments.png">
+<meta property="og:image" content="https://nathanwhy.com/images/post/instruments2.png">
+<meta property="og:updated_time" content="2017-04-16T13:23:22.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ARC 下的循环引用">
+<meta name="twitter:description" content="本文翻译自 digitalleaves.com，感谢 dopcn 校稿。 ARC 下的循环引用类似于日本的 B 级恐怖片。当你刚成为苹果开发者，你或许不会关心他们的存在。直到某天你的一个 app 因内存泄露而闪退，你才突然意识到他们的存在，并且发现循环引用像幽灵一样存在于代码的各个角落。年复一年，你开始学会如何处理循环引用，检测和避免它们，但是这部片子的恐怖结局还是在那里，随时可能出现。 ARC">
+<meta name="twitter:image" content="https://nathanwhy.com/images/post/retainCycle.jpg">
+<meta name="twitter:creator" content="@nathanwhy">
+  
+  
+    <link rel="icon" href="images/favicon.ico">
+  
+  <link rel="stylesheet" href="/css/typing.css">
+  <link rel="stylesheet" href="/css/donate.css">
+  
+</head>
+
+  
+    
+      <body>
+    
+  
+      <div id="container" class="container">
+        <article id="post-2015-05-28-memory-leak-in-arc" class="article article-type-post" itemscope itemprop="blogPost">
+  <header id="header" class="header">
+    <div class="mobile-nav">
+      <h1 class="nickname">Nathanwhy</h1>
+      <a id="menu">
+        &#9776; Menu
+      </a>
+    </div>
+    
+        <nav id="main-nav" class="main-nav nav-left">
+    
+    
+      <a class="main-nav-link" href="/">Home</a>
+    
+      <a class="main-nav-link" href="/archives">Archives</a>
+    
+      <a class="main-nav-link" href="/about">About</a>
+    
+  </nav>
+</header>
+
+  <hr/>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      ARC 下的循环引用
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry typo" itemprop="articleBody">
+      
+        <p>本文翻译自 <a href="http://digitalleaves.com/blog/2015/05/demystifying-retain-cycles-in-arc/" target="_blank" rel="noopener">digitalleaves.com</a>，感谢 <a href="https://github.com/dopcn" target="_blank" rel="noopener">dopcn</a> 校稿。</p>
+<p>ARC 下的循环引用类似于日本的 B 级恐怖片。当你刚成为苹果开发者，你或许不会关心他们的存在。直到某天你的一个 app 因内存泄露而闪退，你才突然意识到他们的存在，并且发现循环引用像幽灵一样存在于代码的各个角落。年复一年，你开始学会如何处理循环引用，检测和避免它们，但是这部片子的恐怖结局还是在那里，随时可能出现。</p>
+<p>ARC 令许多开发者（包括我）感到失望的地方之一是苹果保留了用 ARC 来进行内存管理。ARC 很不幸地没有包括一个循环引用检测器，所以很容易就会产生循环引用，因此迫使开发者在写代码的时候采取一些特别的防范措施。</p>
+<p>循环引用一直是一些 iOS 开发者感到费解的一个课题。<br>网上对此也有一些误解<a href="https://dhoerl.wordpress.com/2013/04/23/i-finally-figured-out-weakself-and-strongself/" target="_blank" rel="noopener">[1]</a><a href="http://www.reigndesign.com/blog/debugging-retain-cycles-in-objective-c-four-likely-culprits/" target="_blank" rel="noopener">[2]</a>，这些文章给了错误的建议和修复方法，其方法甚至可能引发问题和导致闪退。在这片文章，我想要针对这些问题解释清楚。</p>
+<p>##理论简介</p>
+<p>内存管理可以追溯到手动内存管理（Manual Retain Release，简称 MRR）。在 MRR，开发者创建的每一个对象，需要声明其拥有权，从而保持对象存在于内存中，当对象不再需要的时候撤销拥有权释放它。MRR 通过引用计数系统实现这套拥有权体系，也就是说每个对象有个计数器，通过计数加一表明被一个对象拥有，减一表明不再持有。当计数为零，对象将被释放。由于手动管理内存实在太烦人，因此苹果推出了自动引用计数（ARC）来解放开发者，不再需要开发者手动添加 retain 和 release 操作，从而可以专注于 App 开发。在 ARC，开发者将会定义一个变量为“strong”或“weak”。一个 weak 弱引用无法 retain 对象，而 strong 引用会 retain 这个对象，并将其引用计数加一。</p>
+<p><img src="/images/post/retainCycle.jpg" alt="retainCycle"></p>
+<p>##我为什么要关心这些</p>
+<p>ARC 的问题是循环引用很容易发生。当两个不同的对象各有一个强引用指向对方，那么循环引用便产生了。试想下，一个 <em>book</em> 对象持有多个 <em>page</em> 对象，每个 <em>page</em> 对象又有个属性指向它所属的 <em>book</em> 对象。当你释放了持有 <em>book</em> 和 <em>page</em> 对象的变量时，他们仍然还有强引用指向各自，因此你无法释放他们的内存，即使已经没有变量持有他们。</p>
+<p>不幸的是，循环引用在实际中并没有那么容易被发现。多个对象之间（A 持有 B，B 持有 C，C 也恰好持有 A）也可以产生循环引用。更糟的是，Objective-C 的 block 和 Swift 的闭包都是独立内存对象，它们会持有其所引用的对象，于是就引发了潜在的循环引用问题。</p>
+<p>循环引用对 app 有潜在的危害，会使内存消耗过高，性能变差和 app 闪退等。然而，苹果文档对于可能发生循环引用的场景以及如何避免并没有详细描述，这就容易导致一些误解和不良的编程习惯。</p>
+<p>##一些用例模拟</p>
+<p>废话不多说，我们一起来分析一些场景中是否会产生循环引用，以及如何避免它。</p>
+<p>###父子对象关系</p>
+<p>父子对象关系是一个循环引用的典型案例，不幸的是，它也是唯一一个存在于苹果文档中的案例。其实就是前文描述的 Book 与 Page 案例。典型的解决方法就是，在子类定义一个指向父类的变量，声明为 weak 弱引用，从而避免循环引用。</p>
+<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Parent</span> </span>&#123;</span><br><span class="line">   <span class="keyword">var</span> name: <span class="type">String</span></span><br><span class="line">   <span class="keyword">var</span> child: <span class="type">Child</span>?</span><br><span class="line">   <span class="keyword">init</span>(name: <span class="type">String</span>) &#123;</span><br><span class="line">      <span class="keyword">self</span>.name = name</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Child</span> </span>&#123;</span><br><span class="line">   <span class="keyword">var</span> name: <span class="type">String</span></span><br><span class="line">   <span class="keyword">weak</span> <span class="keyword">var</span> parent: <span class="type">Parent</span>!</span><br><span class="line">   <span class="keyword">init</span>(name: <span class="type">String</span>, parent: <span class="type">Parent</span>) &#123;</span><br><span class="line">      <span class="keyword">self</span>.name = name</span><br><span class="line">      <span class="keyword">self</span>.parent = parent</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在 swift 中子类指向父对象的变量是一个弱引用，这就迫使我们将该弱引用定义为 optional 类型。如果不使用 optional 可以有另一种做法，将指向父对象的变量声明为“无主引用（unowned）”（表明我们不持有该对象，也不对其进行内存管理）。然而在这种情况下，我们必须非常小心，确保只要还有子对象指向它，父对象不变成 nil，否则会直接闪退。</p>
+<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Parent</span> </span>&#123;</span><br><span class="line">   <span class="keyword">var</span> name: <span class="type">String</span></span><br><span class="line">   <span class="keyword">var</span> child: <span class="type">Child</span>?</span><br><span class="line">   <span class="keyword">init</span>(name: <span class="type">String</span>) &#123;</span><br><span class="line">      <span class="keyword">self</span>.name = name</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Child</span> </span>&#123;</span><br><span class="line">   <span class="keyword">var</span> name: <span class="type">String</span></span><br><span class="line">   <span class="keyword">unowned</span> <span class="keyword">var</span> parent: <span class="type">Parent</span></span><br><span class="line">   <span class="keyword">init</span>(name: <span class="type">String</span>, parent: <span class="type">Parent</span>) &#123;</span><br><span class="line">      <span class="keyword">self</span>.name = name</span><br><span class="line">      <span class="keyword">self</span>.parent = parent</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">var</span> parent: <span class="type">Parent</span>! = <span class="type">Parent</span>(name: <span class="string">"John"</span>)</span><br><span class="line"><span class="keyword">var</span> child: <span class="type">Child</span>! = <span class="type">Child</span>(name: <span class="string">"Alan"</span>, parent: parent)</span><br><span class="line">parent = <span class="literal">nil</span></span><br><span class="line">child.parent &lt;== possible crash here!</span><br></pre></td></tr></table></figure>
+<p>通常有效的做法是，父对象必须持有（强引用）子对象，而子对象只要保持一个弱引用指向他们的父对象。这同样适用于集合对象，它们必须持有它们包含的对象。</p>
+<p>###当 Block 和闭包包含在类的成员变量中</p>
+<p>另外一个典型的例子，可能不是那么直观。如我们前面解释的，闭包和 block 都是独立的内存对象，会 retain 它们所引用的对象，因此如果我们有个类，里面有个闭包变量，并且这个闭包恰好引用了自身所属对象的一个属性或方法，那么就可能产生循环引用，因为闭包会创建强引用捕获“self”。</p>
+<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyClass</span> </span>&#123;</span><br><span class="line">   <span class="built_in">lazy</span> <span class="keyword">var</span> myClosureVar = &#123;</span><br><span class="line">      <span class="keyword">self</span>.doSomething()</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个案例的解决方法是定义一个弱版本的 self，然后在闭包或 block 中使用。在 objective-C,我们会定义一个新的变量：</p>
+<figure class="highlight objc"><table><tr><td class="code"><pre><span class="line">- (<span class="keyword">id</span>) init() &#123;</span><br><span class="line">   __<span class="keyword">weak</span> MyClass * weakSelf = <span class="keyword">self</span>;</span><br><span class="line">   <span class="keyword">self</span>.myClosureVar = ^&#123;</span><br><span class="line">      [weakSelf doSomething];</span><br><span class="line">   &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然而在 Swift 我们只需要在闭包的头部声明 <code>[weak self in]</code>:</p>
+<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> myClosureVar = &#123;</span><br><span class="line">   [<span class="keyword">weak</span> <span class="keyword">self</span>] <span class="keyword">in</span></span><br><span class="line">   <span class="keyword">self</span>?.doSomething()</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>用这个方法，当闭包结束的时候，内部的 self 变量不会被强引用，所以它会被释放，打破了循环引用。注意当 self 被声明为 weak，闭包内部的 self 是个可选值。</p>
+<p>###GCD: dispatch_async</p>
+<p>和我们通常所认为的不同，dispatch_async 自身不会造成循环引用</p>
+<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line">dispatch_async(queue, &#123; () -&gt; <span class="type">Void</span> <span class="keyword">in</span></span><br><span class="line">   <span class="keyword">self</span>.doSomething(); </span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+<p>在这里，闭包会强引用 self，但是实例化的 self 不会强引用闭包，所以一旦闭包结束，它就会被释放，所以循环引用也不会产生。然而，总有些开发者认为它可能会产生循环引用。有些开发者甚至以为，所有在 block 和闭包里面的 self 都需要弱引用：</p>
+<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line">dispatch_async(queue, &#123;</span><br><span class="line">   [<span class="keyword">weak</span> <span class="keyword">self</span>] <span class="keyword">in</span></span><br><span class="line">   <span class="keyword">self</span>?.doSomething()</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>在我看来，每种情况都采用这种方法并不是一个好的实践。让我们试想下，如果我们有个对象，用于发送一个后台任务（比如下载数据），并且调用了 self 的一个方法。这时如果我们弱引用 self，该对象的生命周期结束早于闭包结束被释放，因而当我们的闭包调用的 doSomething()方法，该对象可能就不存在了，方法也得不到执行。合适的解决方法是（苹果推荐）在闭包内部，声明一个强引用指向弱引用。</p>
+<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line">dispatch_async(queue, &#123;</span><br><span class="line">   [<span class="keyword">weak</span> <span class="keyword">self</span>] <span class="keyword">in</span></span><br><span class="line">   <span class="keyword">if</span> <span class="keyword">let</span> strongSelf = <span class="keyword">self</span> &#123;</span><br><span class="line">      strongSelf.doSomething()</span><br><span class="line">   &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>我觉得这种语法不仅恶心乏味不直观，而且违反了闭包作为一个独立处理实体的原则。学会理解对象的生命周期，明白何时应该声明弱引用，以及对象生存周期的意义，这很重要。但是，这又使得我分心而无法专注于 app 开发的问题本身，如果 Cocoa 不使用 ARC，也就不必要写这些代码。</p>
+<p>###本地闭包和 block</p>
+<p>函数的闭包和 block 如果没有引用任何实例或类变量，其本身也不会造成循环引用。最常见的一个例子就是 <code>UIView</code> 的 <code>animateWithDuration</code>。 </p>
+<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">myMethod</span><span class="params">()</span></span> &#123;</span><br><span class="line">   ...</span><br><span class="line">   <span class="type">UIView</span>.animateWithDuration(<span class="number">0.5</span>, animations: &#123; () -&gt; <span class="type">Void</span> <span class="keyword">in</span></span><br><span class="line">      <span class="keyword">self</span>.someOutlet.alpha = <span class="number">1.0</span></span><br><span class="line">      <span class="keyword">self</span>.someMethod()</span><br><span class="line">   &#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>和 dispatch_async 和其他相关的 GCD 相关方法一样，我们不需要担心局部变量闭包和 block 产生循环引用。</p>
+<p>###代理协议</p>
+<p>代理协议也是一个典型的场景，需要你使用弱引用来避免循环引用。将代理声明为 weak 是一个即好又安全的做法：</p>
+<p><code>@property (nonatomic, weak) id &lt;MyCustomDelegate&gt; delegate;</code></p>
+<p>在 swift：</p>
+<p><code>weak var delegate: MyCustomDelegate?</code></p>
+<p>在大多数的情况中，一个对象的代理持有一个实例化的对象，或应当生命周期长于该对象（从而响应代理方法），因此一个设计良好的类应该不需要我们考虑任何有关生命周期的问题。</p>
+<p>###使用 Instruments 调试循环引用</p>
+<p>不管我多努力仔细，我有时还是会忘记声明一个弱引用，然后意外地创建一个新的对象（感谢 ARC 的无所作为！）。幸运的是，XCode 自带了一个很强大的工具 Instruments，用于检测和定位循环引用。一旦你的 app 开发结束，即将提交到 Apple Store，先分析你的 app 是一个好的习惯。Instruments 有很多组件，可以用来分析 app 的不同方面，但是我们现在关心的时 Leak 选项。</p>
+<p><img src="/images/post/instruments.png" alt="instruments"></p>
+<p>Instruments 一启动，你的应用也应该启动了，然后执行一些交互操作，特别是你想要测试的区域或视图控制器。被检测到的泄露都会以一条红色线显示在 Leaks 区域。Assistant 视图会显示关于泄露的栈追踪，甚至可以直接定位到出问题的代码。</p>
+<p><img src="/images/post/instruments2.png" alt="instruments2"></p>
+
+      
+      
+    </div>
+    <footer class="article-footer">
+      <ul class="article-meta">
+        <li>
+          <span class="label">Published Date:</span>
+          <a href="/2015/05/28/2015-05-28-memory-leak-in-arc/" class="article-date">
+  <time datetime="2015-05-27T16:46:27.000Z" itemprop="datePublished">2015-05-28</time>
+</a>
+
+        </li>
+        
+        
+          <li>
+            <span class="label">Tag:</span>
+            
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ARC/">ARC</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/iOS/">iOS</a></li></ul>
+
+
+          </li>
+        
+        <hr/>
+      </ul>
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav" class="article-nav">
+  
+    <a href="/2015/07/18/2015-07-18-Swift-Functors-Applicatives-and-Monads/" id="article-nav-newer" class="article-nav-link-wrap newer">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Swift Functors, Applicatives, and Monads 的图文解释
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2015/05/11/2015-05-11-Reducing-Dynamic-Dispatch/" id="article-nav-older" class="article-nav-link-wrap older">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">通过减少动态派送提升性能</div>
+    </a>
+  
+</nav>
+
+
+  
+</article>
+
+
+
+
+
+
+
+
+
+
+      </div>
+      
+    <footer id="footer" class="post-footer footer">
+      
+      <hr/>
+      <div id="footerContent" class="footer-content">
+        <p>Nathanwhy</p>
+
+
+      </div>
+    </footer>
+
+      
+
+
+
+
+
+
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/typing.js"></script>
+<!--[if lt IE 9]><script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7/html5shiv.min.js"></script><![endif]-->
+
+
+
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-60259195-2', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+
+
+
+    </div>
+  </body>
+</html>

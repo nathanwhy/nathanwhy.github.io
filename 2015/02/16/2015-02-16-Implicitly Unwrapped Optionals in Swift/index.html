@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  
+  <title>Implicitly Unwrapped Optionals in Swift | Nathanwhy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="文章翻译自 Command Shift 的 Implicitly Unwrapped Optionals in Swift Implicitly Unwrapped Optionals(隐式解包可选值) 乍看之下可能没有意义，它是一个可选值，但是你总是要假定它是否有值，为啥还要这么个东西？ 根据这些年的工作经历，对属性最主要的使用是 set 方法，而不是初始化。这非常适合 Cocoa 对象的生命周">
+<meta name="keywords" content="Swift">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Implicitly Unwrapped Optionals in Swift">
+<meta property="og:url" content="https://nathanwhy.com/2015/02/16/2015-02-16-Implicitly Unwrapped Optionals in Swift/index.html">
+<meta property="og:site_name" content="Nathanwhy">
+<meta property="og:description" content="文章翻译自 Command Shift 的 Implicitly Unwrapped Optionals in Swift Implicitly Unwrapped Optionals(隐式解包可选值) 乍看之下可能没有意义，它是一个可选值，但是你总是要假定它是否有值，为啥还要这么个东西？ 根据这些年的工作经历，对属性最主要的使用是 set 方法，而不是初始化。这非常适合 Cocoa 对象的生命周">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2017-04-16T13:22:24.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Implicitly Unwrapped Optionals in Swift">
+<meta name="twitter:description" content="文章翻译自 Command Shift 的 Implicitly Unwrapped Optionals in Swift Implicitly Unwrapped Optionals(隐式解包可选值) 乍看之下可能没有意义，它是一个可选值，但是你总是要假定它是否有值，为啥还要这么个东西？ 根据这些年的工作经历，对属性最主要的使用是 set 方法，而不是初始化。这非常适合 Cocoa 对象的生命周">
+<meta name="twitter:creator" content="@nathanwhy">
+  
+  
+    <link rel="icon" href="images/favicon.ico">
+  
+  <link rel="stylesheet" href="/css/typing.css">
+  <link rel="stylesheet" href="/css/donate.css">
+  
+</head>
+
+  
+    
+      <body>
+    
+  
+      <div id="container" class="container">
+        <article id="post-2015-02-16-Implicitly Unwrapped Optionals in Swift" class="article article-type-post" itemscope itemprop="blogPost">
+  <header id="header" class="header">
+    <div class="mobile-nav">
+      <h1 class="nickname">Nathanwhy</h1>
+      <a id="menu">
+        &#9776; Menu
+      </a>
+    </div>
+    
+        <nav id="main-nav" class="main-nav nav-left">
+    
+    
+      <a class="main-nav-link" href="/">Home</a>
+    
+      <a class="main-nav-link" href="/archives">Archives</a>
+    
+      <a class="main-nav-link" href="/about">About</a>
+    
+  </nav>
+</header>
+
+  <hr/>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Implicitly Unwrapped Optionals in Swift
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry typo" itemprop="articleBody">
+      
+        <p>文章翻译自 Command Shift 的 <a href="http://commandshift.co.uk/blog/2014/07/20/swift-implicitly-unwrapped-optionals/" target="_blank" rel="noopener">Implicitly Unwrapped Optionals in Swift</a></p>
+<p>Implicitly Unwrapped Optionals(隐式解包可选值) 乍看之下可能没有意义，它是一个可选值，但是你总是要假定它是否有值，为啥还要这么个东西？</p>
+<p>根据这些年的工作经历，对属性最主要的使用是 set 方法，而不是初始化。这非常适合 Cocoa 对象的生命周期。例如，<code>view</code> ，以及你在 <code>loadview</code> 或 <code>viewdidload</code> 方法下创建的 subviews，他们会被延迟加载，其时间点并不跟 <code>viewController</code> 被初始化的时间点一致。</p>
+<p>如果 outlets 被声明为 <code>var</code> 属性，通常会设置一个初始值，或者设置一个初始化方法，否则编译器不会通过，设置属性类型为 optional 将不再需要这个要求，因为 optional 有一个默认的 <code>.None</code> 值，然后在代码里你必须对它进行解包。</p>
+<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> label : <span class="type">UILabel</span>?</span><br><span class="line">...</span><br><span class="line">label!.text = <span class="string">"Unwrapped label"</span></span><br></pre></td></tr></table></figure>
+<p>这个是可行的，但是太难看了。</p>
+<p>将属性设置为 Implicitly Unwrapped Optional 可读性更强，且功能一样。</p>
+<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> label: <span class="type">UILabel</span>!</span><br><span class="line">...</span><br><span class="line">label.text = <span class="string">"Unwrapped label"</span></span><br></pre></td></tr></table></figure>
+<p>这不仅仅用于 UI 组件，任何你想要传递给另一个对象，但是没有初始化方法，最好也设置成 Implicitly Unwrapped Optional。苹果文档是这么说的：</p>
+<blockquote>
+<p>“When you declare an outlet in Swift, you should make the type of the outlet an implicitly unwrapped optional. This way, you can let the storyboard connect the outlets at runtime, after initialization. When your class is initialized from a storyboard or xib file, you can assume that the outlet has been connected.”</p>
+</blockquote>
+<blockquote>
+<p>Excerpt From: Apple Inc. “Using Swift with Cocoa and Objective-C.”</p>
+</blockquote>
+<p> Implicitly Unwrapped Optional 还可以确认是否有值。</p>
+<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> label != <span class="literal">nil</span> &#123;</span><br><span class="line">  label.text = <span class="string">"yes,there’s a label here"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>苹果推荐 Implicitly Unwrapped Optionals 只使用于那些非 <code>nil</code> 的确定值。预想的使用场景就是赋值，而不仅仅是初始化。</p>
+<p>另一个使用场景是在实现或重载 Cocoa 的方法，</p>
+<blockquote>
+<p>Because Objective-C does not make any guarantees that an object is non–nil, Swift makes all classes in argument types and return types optional in imported Objective-C APIs. Before you use an Objective-C object, you should check to ensure that it is not missing.</p>
+</blockquote>
+<blockquote>
+<p>In some cases, you might be absolutely certain that an Objective-C method or property never returns a nil object reference. To make objects in this special scenario more convenient to work with, Swift imports object types as implicitly unwrapped optionals. Implicitly unwrapped optional types include all of the safety features of optional types. In addition, you can access the value directly without checking for nil or unwrapping it yourself.</p>
+</blockquote>
+<blockquote>
+<p>Excerpt From: Apple Inc. “Using Swift with Cocoa and Objective-C.”</p>
+</blockquote>
+<p>因此当你在实现某个代理方法的时候，你可以这么做：</p>
+<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">tableView</span><span class="params">(tableView: UITableView! numberOfRowsInSection section: Int)</span></span> -&gt; <span class="type">Int</span> &#123;&#125;</span><br></pre></td></tr></table></figure>
+<p>tableView 被作为一个 Implicitly Unwrapped Optional 传递。你可以确定 tableView 确实被传递进来，从而不需要确认 tableView 是否为 <code>nil</code> 。</p>
+<p>Optional 是权衡利弊的结果。一方面我们得到了统一表达“空值”的方式（不在需要 <code>NSNotFound</code>，<code>NSIntegerMax</code>，-1，0 来表达没有值），但如<a href="http://commandshift.co.uk/blog/2014/06/11/understanding-optionals-in-swift/" target="_blank" rel="noopener">这篇文章所说</a>，我们失去了发送 <code>nil</code> 的便捷安全。</p>
+
+      
+      
+    </div>
+    <footer class="article-footer">
+      <ul class="article-meta">
+        <li>
+          <span class="label">Published Date:</span>
+          <a href="/2015/02/16/2015-02-16-Implicitly Unwrapped Optionals in Swift/" class="article-date">
+  <time datetime="2015-02-16T01:15:33.000Z" itemprop="datePublished">2015-02-16</time>
+</a>
+
+        </li>
+        
+        
+          <li>
+            <span class="label">Tag:</span>
+            
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Swift/">Swift</a></li></ul>
+
+
+          </li>
+        
+        <hr/>
+      </ul>
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav" class="article-nav">
+  
+    <a href="/2015/03/02/2015-03-02-实现twitter iOS app UI/" id="article-nav-newer" class="article-nav-link-wrap newer">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          实现 twitter iOS app UI
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2015/02/15/2015-02-15-start/" id="article-nav-older" class="article-nav-link-wrap older">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">start</div>
+    </a>
+  
+</nav>
+
+
+  
+</article>
+
+
+
+
+
+
+
+
+
+
+      </div>
+      
+    <footer id="footer" class="post-footer footer">
+      
+      <hr/>
+      <div id="footerContent" class="footer-content">
+        <p>Nathanwhy</p>
+
+
+      </div>
+    </footer>
+
+      
+
+
+
+
+
+
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/typing.js"></script>
+<!--[if lt IE 9]><script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7/html5shiv.min.js"></script><![endif]-->
+
+
+
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-60259195-2', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+
+
+
+    </div>
+  </body>
+</html>

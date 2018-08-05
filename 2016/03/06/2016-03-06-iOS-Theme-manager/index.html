@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  
+  <title>iOS 主题换肤杂谈 | Nathanwhy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="陆续看过几种 iOS 主题换肤的代码，现简单记录下思路。 一般需要换肤的视图可能有 UILabel，UISwitch，UIButton，大多都是继承自 UIView，当然还有一些不是继承自 UIView 的，比如 UIBarButtonItem。有的需要改变字体和背景的颜色，有的需要更换不同的按钮图片。不同视图设置主题的方式不尽相同，但都不可避免，还是得一种一种地找出来调用。 这里讨论的是如何在更">
+<meta name="keywords" content="iOS">
+<meta property="og:type" content="article">
+<meta property="og:title" content="iOS 主题换肤杂谈">
+<meta property="og:url" content="https://nathanwhy.com/2016/03/06/2016-03-06-iOS-Theme-manager/index.html">
+<meta property="og:site_name" content="Nathanwhy">
+<meta property="og:description" content="陆续看过几种 iOS 主题换肤的代码，现简单记录下思路。 一般需要换肤的视图可能有 UILabel，UISwitch，UIButton，大多都是继承自 UIView，当然还有一些不是继承自 UIView 的，比如 UIBarButtonItem。有的需要改变字体和背景的颜色，有的需要更换不同的按钮图片。不同视图设置主题的方式不尽相同，但都不可避免，还是得一种一种地找出来调用。 这里讨论的是如何在更">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2017-04-16T13:25:38.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="iOS 主题换肤杂谈">
+<meta name="twitter:description" content="陆续看过几种 iOS 主题换肤的代码，现简单记录下思路。 一般需要换肤的视图可能有 UILabel，UISwitch，UIButton，大多都是继承自 UIView，当然还有一些不是继承自 UIView 的，比如 UIBarButtonItem。有的需要改变字体和背景的颜色，有的需要更换不同的按钮图片。不同视图设置主题的方式不尽相同，但都不可避免，还是得一种一种地找出来调用。 这里讨论的是如何在更">
+<meta name="twitter:creator" content="@nathanwhy">
+  
+  
+    <link rel="icon" href="images/favicon.ico">
+  
+  <link rel="stylesheet" href="/css/typing.css">
+  <link rel="stylesheet" href="/css/donate.css">
+  
+</head>
+
+  
+    
+      <body>
+    
+  
+      <div id="container" class="container">
+        <article id="post-2016-03-06-iOS-Theme-manager" class="article article-type-post" itemscope itemprop="blogPost">
+  <header id="header" class="header">
+    <div class="mobile-nav">
+      <h1 class="nickname">Nathanwhy</h1>
+      <a id="menu">
+        &#9776; Menu
+      </a>
+    </div>
+    
+        <nav id="main-nav" class="main-nav nav-left">
+    
+    
+      <a class="main-nav-link" href="/">Home</a>
+    
+      <a class="main-nav-link" href="/archives">Archives</a>
+    
+      <a class="main-nav-link" href="/about">About</a>
+    
+  </nav>
+</header>
+
+  <hr/>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      iOS 主题换肤杂谈
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry typo" itemprop="articleBody">
+      
+        <p>陆续看过几种 iOS 主题换肤的代码，现简单记录下思路。</p>
+<p>一般需要换肤的视图可能有 <code>UILabel</code>，<code>UISwitch</code>，<code>UIButton</code>，大多都是继承自 <code>UIView</code>，当然还有一些不是继承自 <code>UIView</code> 的，比如 <code>UIBarButtonItem</code>。<br>有的需要改变字体和背景的颜色，有的需要更换不同的按钮图片。不同视图设置主题的方式不尽相同，但都不可避免，还是得一种一种地找出来调用。</p>
+<p>这里讨论的是如何在更换主题的时候，告诉那些现存的需要换主题的视图去更改。大致的思路都比较相近，就是给每个视图绑定一个键值，主题切换的时候改变键值所对应的颜色或图片，然后重新调用 <code>setTextColor</code> 等方法。</p>
+<h2 id="root-window"><a href="#root-window" class="headerlink" title="root window"></a>root window</h2><p><a href="https://github.com/Draveness/DKNightVersion" target="_blank" rel="noopener">DKNightVersion</a> 这个库只支持日夜间切换，早期的版本是直接给 view 绑定两种颜色，主题切换的时候就直接递归遍历 root key windon 的所有子视图，然后通过 swizzle 设置另外一种颜色。这种做法简单粗暴，但并不是每个视图都需要去遍历。</p>
+<p>而现在这个库改进了很多。<br>在设置颜色的时候是间接给 view 绑定一个返回颜色的 block，顺带注册通知，主题切换时发送通知即可。</p>
+<p>但这个库有一个问题（已经提pr修复了），视图被释放的时候并没有调用 <code>removeObserver</code> 来移除通知。<br>那要怎么移除通知呢？category 里面是不能重写 <code>dealloc</code> 方法的，具体我们后面看看。</p>
+<h2 id="NSNotification"><a href="#NSNotification" class="headerlink" title="NSNotification"></a>NSNotification</h2><p><a href="https://github.com/yanjunz/ThemeManager" target="_blank" rel="noopener">ThemeManager</a>这个来源于腾讯的某个讲座，只是个小 demo，思路基本上介绍清楚了。</p>
+<figure class="highlight objc"><table><tr><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)setThemeMap:(<span class="built_in">NSDictionary</span> *)themeMap</span><br><span class="line">&#123;</span><br><span class="line">    objc_setAssociatedObject(<span class="keyword">self</span>, &amp;kUIView_ThemeMap, themeMap, OBJC_ASSOCIATION_COPY_NONATOMIC);</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (themeMap) &#123;</span><br><span class="line">        <span class="keyword">@autoreleasepool</span> &#123;</span><br><span class="line">            <span class="comment">// Need to removeObserver in dealloc</span></span><br><span class="line">            <span class="keyword">if</span> (objc_getAssociatedObject(<span class="keyword">self</span>, &amp;kUIView_DeallocHelper) == <span class="literal">nil</span>) &#123;</span><br><span class="line">                __<span class="keyword">unsafe_unretained</span> <span class="keyword">typeof</span>(<span class="keyword">self</span>) weakSelf = <span class="keyword">self</span>; <span class="comment">// <span class="doctag">NOTE:</span> need to be __unsafe_unretained because __weak var will be reset to nil in dealloc</span></span><br><span class="line">                <span class="keyword">id</span> deallocHelper = [<span class="keyword">self</span> addDeallocBlock:^&#123;</span><br><span class="line">                    <span class="built_in">NSLog</span>(<span class="string">@"deallocing %@"</span>, weakSelf);</span><br><span class="line">                    [[<span class="built_in">NSNotificationCenter</span> defaultCenter] removeObserver:weakSelf];</span><br><span class="line">                &#125;];</span><br><span class="line">                objc_setAssociatedObject(<span class="keyword">self</span>, &amp;kUIView_DeallocHelper, deallocHelper, OBJC_ASSOCIATION_ASSIGN);</span><br><span class="line">            &#125;</span><br><span class="line">            </span><br><span class="line">            [[<span class="built_in">NSNotificationCenter</span> defaultCenter] removeObserver:<span class="keyword">self</span> name:kThemeDidChangeNotification object:<span class="literal">nil</span>];</span><br><span class="line">            [[<span class="built_in">NSNotificationCenter</span> defaultCenter] addObserver:<span class="keyword">self</span> selector:<span class="keyword">@selector</span>(themeChanged) name:kThemeDidChangeNotification object:<span class="literal">nil</span>];</span><br><span class="line">            [<span class="keyword">self</span> themeChanged];</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        [[<span class="built_in">NSNotificationCenter</span> defaultCenter] removeObserver:<span class="keyword">self</span> name:kThemeDidChangeNotification object:<span class="literal">nil</span>];</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>它也是用了通知，而巧妙的地方在于移除通知的方法。</p>
+<p><code>addDeallocBlock:</code> 会返回另外一个自定义对象，并保存这个 block，视图被释放之后，它持有的这个自定义对象也被释放，那么就在它的 <code>dealloc</code> 里面调用 block，从而移除通知。 </p>
+<h2 id="NSHashTable"><a href="#NSHashTable" class="headerlink" title="NSHashTable"></a>NSHashTable</h2><p><code>NSHashTable</code> 类似于 <code>NSSet</code>，但和 <code>NSSet</code> 有个很大的不同，就是可以持有weak类型的成员变量。</p>
+<figure class="highlight objc"><table><tr><td class="code"><pre><span class="line"><span class="built_in">NSHashTable</span> *hashTable = [<span class="built_in">NSHashTable</span> weakObjectsHashTable];</span><br></pre></td></tr></table></figure>
+<p>那么我们就可以把它用来替换上文的 <code>NSNotificationCenter</code>，把需要换肤的视图注册到 <code>NSHashTable</code>。因为是弱引用，不用担心它们被强引用而无法释放，而且也不需要手动注销。</p>
+
+      
+      
+    </div>
+    <footer class="article-footer">
+      <ul class="article-meta">
+        <li>
+          <span class="label">Published Date:</span>
+          <a href="/2016/03/06/2016-03-06-iOS-Theme-manager/" class="article-date">
+  <time datetime="2016-03-06T12:55:00.000Z" itemprop="datePublished">2016-03-06</time>
+</a>
+
+        </li>
+        
+        
+          <li>
+            <span class="label">Tag:</span>
+            
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/iOS/">iOS</a></li></ul>
+
+
+          </li>
+        
+        <hr/>
+      </ul>
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav" class="article-nav">
+  
+    <a href="/2016/06/30/2016-06-30-ReactiveCocoa-to-RxSwfit/" id="article-nav-newer" class="article-nav-link-wrap newer">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          从 ReactiveCocoa2.0 到 RxSwift
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2016/01/28/2016-01-28-Cocoa-Architecture-Dropped-Design-Patterns/" id="article-nav-older" class="article-nav-link-wrap older">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Artsy 工程师总结的一些 Cocoa 开发设计误区</div>
+    </a>
+  
+</nav>
+
+
+  
+</article>
+
+
+
+
+
+
+
+
+
+
+      </div>
+      
+    <footer id="footer" class="post-footer footer">
+      
+      <hr/>
+      <div id="footerContent" class="footer-content">
+        <p>Nathanwhy</p>
+
+
+      </div>
+    </footer>
+
+      
+
+
+
+
+
+
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/typing.js"></script>
+<!--[if lt IE 9]><script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7/html5shiv.min.js"></script><![endif]-->
+
+
+
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-60259195-2', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+
+
+
+    </div>
+  </body>
+</html>

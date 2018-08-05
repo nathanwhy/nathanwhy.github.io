@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  
+  <title>ReactiveCocoa 3.0 in MVVM | Nathanwhy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="本文翻译自 blog.scottlogic.com，感谢 dopcn 校稿。 这个是我最后一篇关于 ReactiveCocoa 3.0 （简称 RAC3）的文章，主要介绍了在 MVVM 实践中更多复杂的 RAC 3.0 的用法。 (译者注：前两篇为 ReactiveCocoa 3.0 初见和 ReactiveCocoa 3.0 初见(2)) ReactiveCocoa 3.0 当前还处于测试阶段，">
+<meta name="keywords" content="ReactiveCocoa">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ReactiveCocoa 3.0 in MVVM">
+<meta property="og:url" content="https://nathanwhy.com/2015/07/31/2015-07-31-ReactiveCocoa-3.0-in-MVVM/index.html">
+<meta property="og:site_name" content="Nathanwhy">
+<meta property="og:description" content="本文翻译自 blog.scottlogic.com，感谢 dopcn 校稿。 这个是我最后一篇关于 ReactiveCocoa 3.0 （简称 RAC3）的文章，主要介绍了在 MVVM 实践中更多复杂的 RAC 3.0 的用法。 (译者注：前两篇为 ReactiveCocoa 3.0 初见和 ReactiveCocoa 3.0 初见(2)) ReactiveCocoa 3.0 当前还处于测试阶段，">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://nathanwhy.com/images/post/MVVMPattern.png">
+<meta property="og:image" content="https://nathanwhy.com/images/post/MVVMReactiveCocoa.png">
+<meta property="og:image" content="https://nathanwhy.com/images/post/MVVMRAC3.png">
+<meta property="og:updated_time" content="2017-04-16T13:23:09.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="ReactiveCocoa 3.0 in MVVM">
+<meta name="twitter:description" content="本文翻译自 blog.scottlogic.com，感谢 dopcn 校稿。 这个是我最后一篇关于 ReactiveCocoa 3.0 （简称 RAC3）的文章，主要介绍了在 MVVM 实践中更多复杂的 RAC 3.0 的用法。 (译者注：前两篇为 ReactiveCocoa 3.0 初见和 ReactiveCocoa 3.0 初见(2)) ReactiveCocoa 3.0 当前还处于测试阶段，">
+<meta name="twitter:image" content="https://nathanwhy.com/images/post/MVVMPattern.png">
+<meta name="twitter:creator" content="@nathanwhy">
+  
+  
+    <link rel="icon" href="images/favicon.ico">
+  
+  <link rel="stylesheet" href="/css/typing.css">
+  <link rel="stylesheet" href="/css/donate.css">
+  
+</head>
+
+  
+    
+      <body>
+    
+  
+      <div id="container" class="container">
+        <article id="post-2015-07-31-ReactiveCocoa-3.0-in-MVVM" class="article article-type-post" itemscope itemprop="blogPost">
+  <header id="header" class="header">
+    <div class="mobile-nav">
+      <h1 class="nickname">Nathanwhy</h1>
+      <a id="menu">
+        &#9776; Menu
+      </a>
+    </div>
+    
+        <nav id="main-nav" class="main-nav nav-left">
+    
+    
+      <a class="main-nav-link" href="/">Home</a>
+    
+      <a class="main-nav-link" href="/archives">Archives</a>
+    
+      <a class="main-nav-link" href="/about">About</a>
+    
+  </nav>
+</header>
+
+  <hr/>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      ReactiveCocoa 3.0 in MVVM
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry typo" itemprop="articleBody">
+      
+        <p>本文翻译自 <a href="http://blog.scottlogic.com/2015/05/15/mvvm-reactive-cocoa-3.html" target="_blank" rel="noopener">blog.scottlogic.com</a>，感谢 <a href="https://github.com/dopcn" target="_blank" rel="noopener">dopcn</a> 校稿。</p>
+<p>这个是我最后一篇关于 ReactiveCocoa 3.0 （简称 RAC3）的文章，主要介绍了在 MVVM 实践中更多复杂的 RAC 3.0 的用法。</p>
+<p>(译者注：前两篇为 <a href="http://ios.jobbole.com/82081/" target="_blank" rel="noopener">ReactiveCocoa 3.0 初见</a>和 <a href="http://ios.jobbole.com/82125/" target="_blank" rel="noopener">ReactiveCocoa 3.0 初见(2)</a>)</p>
+<p>ReactiveCocoa 3.0 当前还处于测试阶段，截止本文发表当天，已经有 <a href="https://github.com/ReactiveCocoa/ReactiveCocoa/releases" target="_blank" rel="noopener">4 个 beta 版</a>。相较于 Objective-C 版本，3.0 版本带来了全新的 Swift API。尽管函数响应式编程的核心理念保持不变，但是 Swfit API 相比于之前的版本却有很大的不同。它使用了泛型，自定义操作符和柯里化函数，实现效果相当不错。在我前面的几个版本中，我探讨了一般性的 <a href="http://blog.scottlogic.com/2015/04/24/first-look-reactive-cocoa-3.html" target="_blank" rel="noopener">Signal 类</a>，它提供了强类型的信号管道模型，还有一篇关于 <a href="http://blog.scottlogic.com/2015/04/28/reactive-cocoa-3-continued.html" target="_blank" rel="noopener">SignalProducer 的类接口</a>，SignalProducer 为具有附带作用的信号提供了一种更清晰的表达方式。</p>
+<p>自从发布这些文章，有很多人请求我演示更多复杂的 RAC3 代码例子，于是我就写下这篇文章。</p>
+<h2 id="一个快速的-MVVM-刷新机制"><a href="#一个快速的-MVVM-刷新机制" class="headerlink" title="一个快速的 MVVM 刷新机制"></a>一个快速的 MVVM 刷新机制</h2><p>ReactiveCocoa 本身并不是一个 MVVM 的框架，然而，它让那些使用 MVVM 这种流行的 UI 架构的 app 变得更加容易构建。</p>
+<p>这种模式的核心是 ViewModel。它是一个特殊类型的 model，反映 app 的 UI 状态。它包含每个 UI 的详细状态，比如当前 textField 的文本内容，或者按钮的 enable 状态。它也提供了视图可以进行的响应操作，比如响应按钮的点击或者手势识别的响应操作。</p>
+<p><img src="/images/post/MVVMPattern.png" alt=""></p>
+<p>从 iOS 开发层面来具体看 MVVM 模式，View 由 ViewController 和对应的 UI（无论是 nib，storyboard 还是代码生成）</p>
+<p><img src="/images/post/MVVMReactiveCocoa.png" alt=""></p>
+<p>使用 MVVM 会使得 View 层变得简单，只需进行反映当前的 UI 状态和其他一点点工作。</p>
+<p>ReactiveCocoa 在 MVVM 应用中扮演者特殊的角色，提供一个简单的途径来同步视图和它所关联的 ViewModel。</p>
+<h2 id="在-REACTIVECOCOA-2-0-中进行-MVVM"><a href="#在-REACTIVECOCOA-2-0-中进行-MVVM" class="headerlink" title="在 REACTIVECOCOA 2.0 中进行 MVVM"></a>在 REACTIVECOCOA 2.0 中进行 MVVM</h2><p>在 RAC2，将 ViewModel 上的属性绑定到视图上通常需要使用一堆宏：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">RAC(self.loadingIndicator, hidden) = self.viewModel.executeSearch.executing;</span><br></pre></td></tr></table></figure>
+<p>上述代码通过宏将 loadingIndicator 的 <code>hidden</code> 的属性绑定到 ViewModel 的 <code>executing</code> signal 上。另一个有用的宏是 <code>RACObserve</code>，可以从属性中生成一个信号，作用相当于一个对 KVO 的高效封装。</p>
+<p>（如果你之前没有在 MVVM 中使用 ReactiveCocoa，你可以看看我之前的文章 <a href="http://www.raywenderlich.com/74106/mvvm-tutorial-with-reactivecocoa-part-1" target="_blank" rel="noopener">tutorial on Ray Wenderlich’s site</a>）</p>
+<p>不幸的是，RAC2 这些宏使用起来有些笨拙和累赘。所有基于宏的 API 都是如此，不单单只是 RAC 这些。</p>
+<p>RAC3 不再使用宏和 KVO，而是单纯 Swift 风格的实现。</p>
+<h2 id="RAC3-属性"><a href="#RAC3-属性" class="headerlink" title="RAC3 属性"></a>RAC3 属性</h2><p>几个月前，我写了一篇 <a href="http://blog.scottlogic.com/2015/02/11/swift-kvo-alternatives.html" target="_blank" rel="noopener">KVO and a few KVO-alternatives with Swift</a>，主要说的是缺少强类型，过度依赖 NSObject 和过于笨拙的语法，意味着 KVO 并不适合 swift 的世界。</p>
+<p>在 RAC3，属性（至少你要监听的属性）使用 <code>MutableProperty</code> 类型表示：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">let name = MutableProperty&lt;String&gt;(&quot;&quot;)</span><br></pre></td></tr></table></figure>
+<p>这个实例化了一个 <code>name</code> 属性，类型是 <code>String</code>，初始值是空字符串。注意 name 这个属性是个常量（用的是 let），尽管它代表着一个可变的属性。</p>
+<p>可变属性有一个很简单的 API，一个 <code>value</code> 属性和一个 <code>put</code> 方法，允许你 get 或 set 操作当前的值：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">name.put(&quot;Frank&quot;)</span><br><span class="line">println(name.value)</span><br></pre></td></tr></table></figure>
+<p>他们还暴露了一个类型为<code>SignalProducer</code> 的 <code>producer</code> 属性，允许你观察属性的变化：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">name.producer</span><br><span class="line">  |&gt; start(next: &#123;</span><br><span class="line">    println(&quot;name has changed to value \($0)&quot;)</span><br><span class="line">  &#125;)</span><br></pre></td></tr></table></figure>
+<p>…每一步都很清晰，并且是强类型。</p>
+<p>（译者注：最新 RAC 的 Swift 2 版本，取消了”|&gt;”操作符，改为使用点语法，支持换行）</p>
+<p>在 MVVM 模式，配置一个 ViewModel 通常都会绑定一个属性。换句话说，就是确保视图的变量属性与对应的 ViewModel 属性保持同步。</p>
+<p>出于这个目的，RAC3 有个明确的操作符：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">executionTimeTextField.rac_text  &lt;~ viewModel.queryExecutionTime</span><br></pre></td></tr></table></figure>
+<p>上述代码，viewModel 的 <code>queryExecutionTime</code> 绑定了 textField 的 <code>rac_text</code> 属性。</p>
+<p><strong>注意：</strong> 当前 <a href="https://github.com/ReactiveCocoa/ReactiveCocoa/issues/1986" target="_blank" rel="noopener">RAC3 不支持双向绑定</a>。</p>
+<h2 id="一个-MVVM-RAC3-的例子"><a href="#一个-MVVM-RAC3-的例子" class="headerlink" title="一个 MVVM RAC3 的例子"></a>一个 MVVM RAC3 的例子</h2><p>作为约定，这篇博客包括了一个更深入的 RAC3 的例子。一个 twitter 的搜索 demo：</p>
+<p><img src="/images/post/MVVMRAC3.png" alt=""></p>
+<p>（对的，我的所有代码都与 Twitter 和 Flicker API 有关，如果你在天朝，自重）</p>
+<p>这个 app 会根据给定的 text 来搜索 tweet，搜索会在用户输入后自动执行。</p>
+<p>TwitterSearchViewModel 有如下这些属性： </p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class TwitterSearchViewModel &#123;</span><br><span class="line"></span><br><span class="line">  let searchText = MutableProperty&lt;String&gt;(&quot;&quot;)</span><br><span class="line">  let queryExecutionTime = MutableProperty&lt;String&gt;(&quot;&quot;)</span><br><span class="line">  let isSearching = MutableProperty&lt;Bool&gt;(false)</span><br><span class="line">  let tweets = MutableProperty&lt;[TweetViewModel]&gt;([TweetViewModel]())</span><br><span class="line"></span><br><span class="line">  private let searchService: TwitterSearchService</span><br><span class="line"></span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这些属性就是所有 View 反映视图 UI 状态需要知道的属性，并且允许通过 RAC3 绑定响应更新。tweet 的 tableView 通过 <code>tweets</code> 可变属性被‘返回’，它包含一个数组，里面是 ViewModel 实例，每个都对应一个独立的 cell。</p>
+<p><code>TwitterSearchService</code> 类是一个基于 RAC3 Twitter API 的封装，用 signal producers 代表了网络请求。</p>
+<p>这个应用的核心代码如下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">let textToSearchSignal: SignalProducer&lt;String, NSError&gt;  -&gt; SignalProducer&lt;TwitterResponse, NSError&gt; =</span><br><span class="line">  flatMap(.Latest) &#123;</span><br><span class="line">    text in self.searchService.signalForSearchWithText(text)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">searchService.requestAccessToTwitterSignal()</span><br><span class="line">  |&gt; then(searchText.producer |&gt; mapError &#123; _ in TwitterInstantError.NoError.toError() &#125;)</span><br><span class="line">  |&gt; filter &#123;</span><br><span class="line">      count($0) &gt; 3</span><br><span class="line">    &#125;</span><br><span class="line">  |&gt; throttle(1.0, onScheduler: QueueScheduler.mainQueueScheduler)</span><br><span class="line">  |&gt; on(next: &#123;</span><br><span class="line">      _ in self.isSearching.put(true)</span><br><span class="line">    &#125;)</span><br><span class="line">  |&gt; textToSearchSignal</span><br><span class="line">  |&gt; observeOn(QueueScheduler.mainQueueScheduler)</span><br><span class="line">  |&gt; start(next: &#123;</span><br><span class="line">      response in</span><br><span class="line">      self.isSearching.put(false)</span><br><span class="line">      self.queryExecutionTime.put(&quot;Execution time: \(response.responseTime)&quot;)</span><br><span class="line">      self.tweets.put(response.tweets.map &#123; TweetViewModel(tweet: $0) &#125;)</span><br><span class="line">    &#125;, error: &#123;</span><br><span class="line">      println(&quot;Error \($0)&quot;)</span><br><span class="line">    &#125;)</span><br></pre></td></tr></table></figure>
+<p>这个请求访问了用户 twitter 账户，接着管道将操作传给 <code>searchText.producer</code>，也就是它观察了它自己的 <code>searchText</code> 属性。你将会注意到 producer 并没有直接使用，而是先调用 map 方法 <code>searchText.producer |&gt; mapError</code>。这在 RAC3 中是一个常见问题，因为 signal 有个 error 类型的常量，任何操作合并 signal （或者是 signal producers）就必须要求他们之间的 error 类型是相匹配的。使用 <code>mapError</code> 转化 <code>searchText.producer</code> 可能产生的任意错误为一个 <code>NSError</code>，与管道中其他 signal 相匹配。</p>
+<p>再往下，signal 被过滤（filter）和节流(throttle)。如果 <code>searchText</code> 多次变动，这可以减少 signal 的产生。</p>
+<p>然后 signal 被 flat-mapped 到另一个 signal，根据给定的 text 搜索 twitter。注意我已经打破了 <code>flatMap</code> 操作。这个是由于重载了原生的操作符，使得编译器无法决定该执行那个。马上我会在 Github 提一个 issue。</p>
+<h2 id="给-UIKIT-添加可变属性"><a href="#给-UIKIT-添加可变属性" class="headerlink" title="给 UIKIT 添加可变属性"></a>给 UIKIT 添加可变属性</h2><p>当前 RAC 3 缺少一些 UIKit 集成，我猜想它会在下个 beta 版出现。现在，为了给视图绑定一个 ViewModel，你不得不自己添加 extension。幸运的是这很简单。</p>
+<p>在另外一个项目，我已经创建了一个有用的函数，用来懒加载关联属性：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">func lazyAssociatedProperty&lt;T: AnyObject&gt;(host: AnyObject,</span><br><span class="line">                       key: UnsafePointer&lt;Void&gt;, factory: ()-&gt;T) -&gt; T &#123;</span><br><span class="line">  var associatedProperty = objc_getAssociatedObject(host, key) as? T</span><br><span class="line"></span><br><span class="line">  if associatedProperty == nil &#123;</span><br><span class="line">    associatedProperty = factory()</span><br><span class="line">    objc_setAssociatedObject(host, key, associatedProperty,</span><br><span class="line">                                   UInt(OBJC_ASSOCIATION_RETAIN))</span><br><span class="line">  &#125;</span><br><span class="line">  return associatedProperty!</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里创建了一个 <code>T</code> 类型的属性，给定的比例函数式用于第一次访问初始化属性。</p>
+<p>这个可以被用于懒加载一个可变属性：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">func lazyMutableProperty&lt;T&gt;(host: AnyObject, key: UnsafePointer&lt;Void&gt;,</span><br><span class="line">              setter: T -&gt; (), getter: () -&gt; T) -&gt; MutableProperty&lt;T&gt; &#123;</span><br><span class="line">  return lazyAssociatedProperty(host, key) &#123;</span><br><span class="line">    var property = MutableProperty&lt;T&gt;(getter())</span><br><span class="line">    property.producer</span><br><span class="line">      .start(next: &#123;</span><br><span class="line">        newValue in</span><br><span class="line">        setter(newValue)</span><br><span class="line">      &#125;)</span><br><span class="line">    return property</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>上面的代码创建了一个可变的属性，然后向 producer 订阅，当值改变的时候调用 <code>setter</code> 函数。</p>
+<p>这个可以被用于添加 RAC3 属性到视图上，如下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">extension UIView &#123;</span><br><span class="line">  public var rac_alpha: MutableProperty&lt;CGFloat&gt; &#123;</span><br><span class="line">    return lazyMutableProperty(self, &amp;AssociationKey.alpha, &#123; self.alpha = $0 &#125;, &#123; self.alpha  &#125;)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  public var rac_hidden: MutableProperty&lt;Bool&gt; &#123;</span><br><span class="line">    return lazyMutableProperty(self, &amp;AssociationKey.hidden, &#123; self.hidden = $0 &#125;, &#123; self.hidden  &#125;)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>注意，这些属性只有 getter 方法，你得通过属性本身的 <code>put</code> 方法为他们赋值。</p>
+<p>在这个项目我只添加了我需要的属性：</p>
+<p>对于控件来说，如果他们也会改变同样的属性，这种情况就自然会更复杂。在一个 textField 你必须订阅用户输入结果的变化：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">extension UITextField &#123;</span><br><span class="line">  public var rac_text: MutableProperty&lt;String&gt; &#123;</span><br><span class="line">    return lazyAssociatedProperty(self, &amp;AssociationKey.text) &#123;</span><br><span class="line"></span><br><span class="line">      self.addTarget(self, action: &quot;changed&quot;, forControlEvents: UIControlEvents.EditingChanged)</span><br><span class="line"></span><br><span class="line">      var property = MutableProperty&lt;String&gt;(self.text ?? &quot;&quot;)</span><br><span class="line">      property.producer</span><br><span class="line">        .start(next: &#123;</span><br><span class="line">          newValue in</span><br><span class="line">          self.text = newValue</span><br><span class="line">        &#125;)</span><br><span class="line">      return property</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  func changed() &#123;</span><br><span class="line">    rac_text.value = self.text</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这里，ViewModel 可以被绑定：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">viewModel.searchText &lt;~ searchTextField.rac_text</span><br><span class="line">executionTimeTextField.rac_text  &lt;~ viewModel.queryExecutionTime</span><br></pre></td></tr></table></figure>
+<p>这里还可以对绑定的值做 map 操作：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">searchAcitivyIndicator.rac_hidden &lt;~ viewModel.isSearching.producer</span><br><span class="line">                                       |&gt; map &#123; !$0 &#125;</span><br><span class="line">tweetsTable.rac_alpha &lt;~ viewModel.isSearching.producer</span><br><span class="line">                            |&gt; map &#123; $0 ? CGFloat(0.5) : CGFloat(1.0) &#125;</span><br></pre></td></tr></table></figure>
+<p>对于 tableView，这个项目还包括了 <a href="http://blog.scottlogic.com/2014/05/11/reactivecocoa-tableview-binding.html" target="_blank" rel="noopener">tableView 绑定代码</a>的版本。</p>
+<p>有趣的是，RAC3 还有个 <code>ConstantProperty</code> 类，看起来有点奇怪！我把它用在了构建每个 cell 的 ViewModel：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class TweetViewModel: NSObject &#123;</span><br><span class="line"></span><br><span class="line">  let status: ConstantProperty&lt;String&gt;</span><br><span class="line">  let username: ConstantProperty&lt;String&gt;</span><br><span class="line">  let profileImageUrl: ConstantProperty&lt;String&gt;</span><br><span class="line"></span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>ConstantProperty</code> 的值也是可以使用 <code>&lt;~</code> 绑定操作，而且在未来，如果你决定使它成为可变，你不需要在改变代码。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>RAC3 是一个快速发展的强大框架。也有一两点缺陷，但是也不难看出它代表了一个里程碑。</p>
+<p>所有 demo 的代码都可以在 <a href="https://github.com/ColinEberhardt/ReactiveTwitterSearch" target="_blank" rel="noopener">Github</a> 上找到。建议也看下另外一个 <a href="https://github.com/nebhale/WhiskyNotebook" target="_blank" rel="noopener">WhiskyNotebook</a> 项目，它也用到了 RAC3。</p>
+
+      
+      
+    </div>
+    <footer class="article-footer">
+      <ul class="article-meta">
+        <li>
+          <span class="label">Published Date:</span>
+          <a href="/2015/07/31/2015-07-31-ReactiveCocoa-3.0-in-MVVM/" class="article-date">
+  <time datetime="2015-07-31T14:46:27.000Z" itemprop="datePublished">2015-07-31</time>
+</a>
+
+        </li>
+        
+        
+          <li>
+            <span class="label">Tag:</span>
+            
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ReactiveCocoa/">ReactiveCocoa</a></li></ul>
+
+
+          </li>
+        
+        <hr/>
+      </ul>
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav" class="article-nav">
+  
+    <a href="/2015/09/30/2015-09-30-小白级图像反色处理/" id="article-nav-newer" class="article-nav-link-wrap newer">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          小白级图像反色处理
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2015/07/18/2015-07-18-Swift-Functors-Applicatives-and-Monads/" id="article-nav-older" class="article-nav-link-wrap older">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Swift Functors, Applicatives, and Monads 的图文解释</div>
+    </a>
+  
+</nav>
+
+
+  
+</article>
+
+
+
+
+
+
+
+
+
+
+      </div>
+      
+    <footer id="footer" class="post-footer footer">
+      
+      <hr/>
+      <div id="footerContent" class="footer-content">
+        <p>Nathanwhy</p>
+
+
+      </div>
+    </footer>
+
+      
+
+
+
+
+
+
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/typing.js"></script>
+<!--[if lt IE 9]><script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7/html5shiv.min.js"></script><![endif]-->
+
+
+
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-60259195-2', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+
+
+
+    </div>
+  </body>
+</html>

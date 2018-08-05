@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  
+  <title>从 ReactiveCocoa2.0 到 RxSwift | Nathanwhy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="本文主要讨论 ReactiveCocoa2.0 与 RxSwift 的一些不同点。ReactiveCocoa3.0之后对应的是 Swift 版本，感觉国内使用的并不多，这里暂不讨论。 在实际开发中，我们还需要引入 RxCocoa，它在 Cocoa 和 Cocoa Touch 的基础上增加了一些便捷的方法，使得能更好地参与到事件流中。 ObservableObservable 就是我们在 RAC 中">
+<meta name="keywords" content="iOS,ReactiveCocoa,RxSwift">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从 ReactiveCocoa2.0 到 RxSwift">
+<meta property="og:url" content="https://nathanwhy.com/2016/06/30/2016-06-30-ReactiveCocoa-to-RxSwfit/index.html">
+<meta property="og:site_name" content="Nathanwhy">
+<meta property="og:description" content="本文主要讨论 ReactiveCocoa2.0 与 RxSwift 的一些不同点。ReactiveCocoa3.0之后对应的是 Swift 版本，感觉国内使用的并不多，这里暂不讨论。 在实际开发中，我们还需要引入 RxCocoa，它在 Cocoa 和 Cocoa Touch 的基础上增加了一些便捷的方法，使得能更好地参与到事件流中。 ObservableObservable 就是我们在 RAC 中">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2017-04-16T13:35:27.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="从 ReactiveCocoa2.0 到 RxSwift">
+<meta name="twitter:description" content="本文主要讨论 ReactiveCocoa2.0 与 RxSwift 的一些不同点。ReactiveCocoa3.0之后对应的是 Swift 版本，感觉国内使用的并不多，这里暂不讨论。 在实际开发中，我们还需要引入 RxCocoa，它在 Cocoa 和 Cocoa Touch 的基础上增加了一些便捷的方法，使得能更好地参与到事件流中。 ObservableObservable 就是我们在 RAC 中">
+<meta name="twitter:creator" content="@nathanwhy">
+  
+  
+    <link rel="icon" href="images/favicon.ico">
+  
+  <link rel="stylesheet" href="/css/typing.css">
+  <link rel="stylesheet" href="/css/donate.css">
+  
+</head>
+
+  
+    
+      <body>
+    
+  
+      <div id="container" class="container">
+        <article id="post-2016-06-30-ReactiveCocoa-to-RxSwfit" class="article article-type-post" itemscope itemprop="blogPost">
+  <header id="header" class="header">
+    <div class="mobile-nav">
+      <h1 class="nickname">Nathanwhy</h1>
+      <a id="menu">
+        &#9776; Menu
+      </a>
+    </div>
+    
+        <nav id="main-nav" class="main-nav nav-left">
+    
+    
+      <a class="main-nav-link" href="/">Home</a>
+    
+      <a class="main-nav-link" href="/archives">Archives</a>
+    
+      <a class="main-nav-link" href="/about">About</a>
+    
+  </nav>
+</header>
+
+  <hr/>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      从 ReactiveCocoa2.0 到 RxSwift
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry typo" itemprop="articleBody">
+      
+        <p>本文主要讨论 ReactiveCocoa2.0 与 RxSwift 的一些不同点。ReactiveCocoa3.0之后对应的是 Swift 版本，感觉国内使用的并不多，这里暂不讨论。</p>
+<p>在实际开发中，我们还需要引入 RxCocoa，它在 Cocoa 和 Cocoa Touch 的基础上增加了一些便捷的方法，使得能更好地参与到事件流中。</p>
+<h3 id="Observable"><a href="#Observable" class="headerlink" title="Observable"></a>Observable<element></element></h3><p>Observable<element> 就是我们在 RAC 中称为信号（Signal）的东西。<br>同样他也有三种事件类型：</element></p>
+<ul>
+<li>.Next(value) 表示新的事件数据。</li>
+<li>.Completed   表示事件序列的完结。</li>
+<li>.Error       同样表示完结，但是代表异常导致的完结。</li>
+</ul>
+<p><code>Observable</code> 属于生产者，而对应的<code>subscribeNext:</code>和<code>bindTo:</code>，我们可认为它是一种消费行为，或者称为我们所熟知的“订阅”。</p>
+<h3 id="shareReplay"><a href="#shareReplay" class="headerlink" title="shareReplay"></a>shareReplay</h3><p>之前文章介绍过，热信号在创建的时候就会执行计算，然后对于多个订阅者会共享这次计算的结果，同时还包括这次计算所产生的副作用（side effect）。<br>Swift 毕竟不是纯函数式语言，还是会有冷热信号的问题，只是在我们实际使用中并不那么容易察觉。</p>
+<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> a: <span class="type">Int</span> = <span class="number">20</span></span><br><span class="line"><span class="keyword">let</span> source = <span class="type">Observable</span>&lt;<span class="type">Int</span>&gt;.create &#123; observer <span class="keyword">in</span></span><br><span class="line">  <span class="keyword">for</span> i <span class="keyword">in</span> <span class="number">1</span>...<span class="number">3</span> &#123;</span><br><span class="line">      observer.on(.<span class="type">Next</span>(i))</span><br><span class="line">  &#125;</span><br><span class="line">  a += <span class="number">1</span></span><br><span class="line">  <span class="built_in">print</span>(a)</span><br><span class="line">  observer.on(.<span class="type">Completed</span>)</span><br><span class="line">  <span class="keyword">return</span> <span class="type">AnonymousDisposable</span> &#123;</span><br><span class="line">      <span class="built_in">print</span>(<span class="string">"Disposed"</span>)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;.shareReplay(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">"Start subscriptions"</span>)</span><br><span class="line"></span><br><span class="line">source.subscribeNext &#123;</span><br><span class="line">  <span class="built_in">print</span>($<span class="number">0</span>)</span><br><span class="line">&#125;</span><br><span class="line">source.subscribeNext &#123;</span><br><span class="line">  <span class="built_in">print</span>($<span class="number">0</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//console:</span></span><br><span class="line"><span class="comment">//Start subscriptions</span></span><br><span class="line"><span class="comment">//1</span></span><br><span class="line"><span class="comment">//2</span></span><br><span class="line"><span class="comment">//3</span></span><br><span class="line"><span class="comment">//21</span></span><br><span class="line"><span class="comment">//Disposed</span></span><br><span class="line"><span class="comment">//3</span></span><br></pre></td></tr></table></figure>
+<p>这里明显是在订阅之后才调用闭包，而且只调用一次。<br>对于多个订阅者的共享了最后一次的事件数据。<br>所以 <code>shareReplay</code> 生成的 <code>Observable</code> 虽然很接近我们在 RAC 所认知的热信号，但两者又不完全一样。<br>前者是被动的，而后者是主动的。对于这种介于冷热之前的 <code>Observable</code>，不妨称之为 warm（文档并未这么说）。<br><code>shareReplay</code> 在这里主要是解决了多次订阅会多次执行的问题。</p>
+<h3 id="disposeBag"><a href="#disposeBag" class="headerlink" title="disposeBag"></a>disposeBag</h3><p>当我们发送 Completed 或者 Error，可以终止订阅行为。<br>另外，我们也可以通过调用 <code>dispose()</code> 或者 <code>takeuntil:</code> 来终止订阅。</p>
+<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">subscribeNext</span><span class="params">(onNext: <span class="params">(<span class="keyword">Self</span>.E)</span></span></span> -&gt; <span class="type">Void</span>) -&gt; <span class="type">Disposable</span></span><br></pre></td></tr></table></figure>
+<p>订阅行为通常都会返回 <code>disposable</code>，这时通过调用 <code>dispose()</code> 可以结束订阅，同时释放资源。</p>
+<p>这里和 RAC 不同的地方是，对于冷信号，RAC 在每次订阅结束之后，订阅者释放时会对持有的 disposable 执行 <code>dispose()</code>；但是 RxSwift 并不会这么做。</p>
+<p>但是 RxSwift 另外加了其他方法来处理这个问题。</p>
+<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> disposeBag = <span class="type">DisposeBag</span>()</span><br><span class="line">doSomethingOutlet.rx_tap</span><br><span class="line">            .subscribeNext &#123; [<span class="keyword">weak</span> <span class="keyword">self</span>] <span class="keyword">in</span> <span class="keyword">self</span>?.showAlert() &#125;</span><br><span class="line">            .addDisposableTo(disposeBag)</span><br></pre></td></tr></table></figure>
+<p><code>disposeBag</code> 一般是由控制器持有。当控制器释放的时候，<code>disposeBag</code> 便会在其 <code>deinit()</code> 里面对 disposable 执行 <code>dispose()</code>。</p>
+<p>这样也就避免了需要手动去调用 dispose 的问题。</p>
+<p>虽然不调用 addDisposableTo 并不会产生什么内存泄露问题，但对于无止境的订阅，如果不调用 dispose 或者 takeuntil，那么就只能等待 Completed 或者 Error 来结束订阅。</p>
+<h3 id="UI-Binding"><a href="#UI-Binding" class="headerlink" title="UI Binding"></a>UI Binding</h3><figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> items = <span class="type">Observable</span>.just([</span><br><span class="line">  <span class="string">"First Item"</span>,</span><br><span class="line">  <span class="string">"Second Item"</span>,</span><br><span class="line">  <span class="string">"Third Item"</span></span><br><span class="line">])</span><br><span class="line"></span><br><span class="line">items</span><br><span class="line">  .bindTo(tableView.rx_itemsWithCellIdentifier(<span class="string">"Cell"</span>, cellType: <span class="type">UITableViewCell</span>.<span class="keyword">self</span>)) &#123; (row, element, cell) <span class="keyword">in</span></span><br><span class="line">      cell.textLabel?.text = <span class="string">"<span class="subst">\(element)</span> @ row <span class="subst">\(row)</span>"</span></span><br><span class="line">  &#125;</span><br><span class="line">  .addDisposableTo(disposeBag)</span><br></pre></td></tr></table></figure>
+<p>这里直接将数据源转成信号，然后直接绑定到对应的 cell 中，解决了之前繁琐的数据源和代理的操作。<br>你也可以通过 UIBindingObserver 来实现自己的 UI 绑定操作。</p>
+<h3 id="Driver"><a href="#Driver" class="headerlink" title="Driver"></a>Driver</h3><p>Driver 是存在于 RxCocoa 中的核心的一个概念，针对苹果开发中 RxSwift 繁琐的操作而进行的处理。</p>
+<ul>
+<li>不能抛出异常（can’t error out）</li>
+<li>默认回到主线程（observe on main scheduler）</li>
+<li>共享副作用（sharing side effects）</li>
+</ul>
+<p>先看文档中给出的错误示范：</p>
+<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> results = query.rx_text</span><br><span class="line">    .throttle(<span class="number">0.3</span>, scheduler: <span class="type">MainScheduler</span>.instance)</span><br><span class="line">    .flatMapLatest &#123; query <span class="keyword">in</span></span><br><span class="line">        fetchAutoCompleteItems(query)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">results</span><br><span class="line">    .<span class="built_in">map</span> &#123; <span class="string">"<span class="subst">\($<span class="number">0</span>.<span class="built_in">count</span>)</span>"</span> &#125;</span><br><span class="line">    .bindTo(resultCount.rx_text)</span><br><span class="line">    .addDisposableTo(disposeBag)</span><br><span class="line"></span><br><span class="line">results</span><br><span class="line">    .bindTo(resultsTableView.rx_itemsWithCellIdentifier(<span class="string">"Cell"</span>)) &#123; (<span class="number">_</span>, result, cell) <span class="keyword">in</span></span><br><span class="line">        cell.textLabel?.text = <span class="string">"<span class="subst">\(result)</span>"</span></span><br><span class="line">    &#125;</span><br><span class="line">    .addDisposableTo(disposeBag)</span><br></pre></td></tr></table></figure>
+<p>首先，这里的 <code>bindTo</code> 也是属于订阅行为，但是两个地方都用到了 <code>bindTo</code>，对于冷信号便会造成重复订阅，出现重复计算。<br>其次，对于 UI 的更新并没有保证一定在主线程。<br>最后，未对异常进行控制处理。</p>
+<p>改进方式有两种，一种是 RxSwift，另一种是 RxCocoa。</p>
+<p>RxSwift</p>
+<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> results = query.rx_text</span><br><span class="line">    .throttle(<span class="number">0.3</span>, scheduler: <span class="type">MainScheduler</span>.instance)</span><br><span class="line">    .flatMapLatest &#123; query <span class="keyword">in</span></span><br><span class="line">        fetchAutoCompleteItems(query)</span><br><span class="line">            .observeOn(<span class="type">MainScheduler</span>.instance) <span class="comment">// results are returned on MainScheduler</span></span><br><span class="line">            .catchErrorJustReturn([])                <span class="comment">// in worst case, errors are handled</span></span><br><span class="line">    &#125;</span><br><span class="line">    .shareReplay(<span class="number">1</span>)                                  <span class="comment">// HTTP requests are shared and results replayed</span></span><br><span class="line">                                                     <span class="comment">// to all UI elements</span></span><br><span class="line"></span><br><span class="line">results</span><br><span class="line">    .<span class="built_in">map</span> &#123; <span class="string">"<span class="subst">\($<span class="number">0</span>.<span class="built_in">count</span>)</span>"</span> &#125;</span><br><span class="line">    .bindTo(resultCount.rx_text)</span><br><span class="line">    .addDisposableTo(disposeBag)</span><br><span class="line"></span><br><span class="line">results</span><br><span class="line">    .bindTo(resultTableView.rx_itemsWithCellIdentifier(<span class="string">"Cell"</span>)) &#123; (<span class="number">_</span>, result, cell) <span class="keyword">in</span></span><br><span class="line">        cell.textLabel?.text = <span class="string">"<span class="subst">\(result)</span>"</span></span><br><span class="line">    &#125;</span><br><span class="line">    .addDisposableTo(disposeBag)</span><br></pre></td></tr></table></figure>
+<p>这里的改进主要是解决上面三个问题。<br>再来看看 RxCocoa：</p>
+<p>RxCocoa</p>
+<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> results = query.rx_text.asDriver()        <span class="comment">// This converts normal sequence into `Driver` sequence.</span></span><br><span class="line">    .throttle(<span class="number">0.3</span>, scheduler: <span class="type">MainScheduler</span>.instance)</span><br><span class="line">    .flatMapLatest &#123; query <span class="keyword">in</span></span><br><span class="line">        fetchAutoCompleteItems(query)</span><br><span class="line">            .asDriver(onErrorJustReturn: [])  <span class="comment">// Builder just needs info what to return in case of error.</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">results</span><br><span class="line">    .<span class="built_in">map</span> &#123; <span class="string">"<span class="subst">\($<span class="number">0</span>.<span class="built_in">count</span>)</span>"</span> &#125;</span><br><span class="line">    .drive(resultCount.rx_text)               <span class="comment">// If there is `drive` method available instead of `bindTo`,</span></span><br><span class="line">    .addDisposableTo(disposeBag)              <span class="comment">// that means that compiler has proved all properties</span></span><br><span class="line">                                              <span class="comment">// are satisfied.</span></span><br><span class="line">results</span><br><span class="line">    .drive(resultTableView.rx_itemsWithCellIdentifier(<span class="string">"Cell"</span>)) &#123; (<span class="number">_</span>, result, cell) <span class="keyword">in</span></span><br><span class="line">        cell.textLabel?.text = <span class="string">"<span class="subst">\(result)</span>"</span></span><br><span class="line">    &#125;</span><br><span class="line">    .addDisposableTo(disposeBag)</span><br></pre></td></tr></table></figure>
+<p><a href="https://github.com/ReactiveX/RxSwift/blob/master/Documentation/Units.md" target="_blank" rel="noopener">来源</a></p>
+<p>可以发现 RxCocoa 中 driver 的用法，和原本的 RxSwift 还是很像的，而且还省去一些繁琐的操作。</p>
+<h3 id="MVVM"><a href="#MVVM" class="headerlink" title="MVVM"></a>MVVM</h3><figure class="highlight objc"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">@interface</span> <span class="title">ASHDetailViewModel</span> : <span class="title">RVMViewModel</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">@property</span> <span class="built_in">NSString</span> *recipeName;</span><br><span class="line"><span class="keyword">@property</span> <span class="built_in">NSString</span> *recipeDescription;</span><br><span class="line"></span><br><span class="line"><span class="keyword">@property</span> RACSignal *updatedContentSignal;<span class="comment">//RACSubject</span></span><br><span class="line"><span class="keyword">@property</span> RACCommand *startTimer;</span><br><span class="line"></span><br><span class="line">-(<span class="built_in">NSString</span> *)titleForStepAtIndex:(<span class="built_in">NSInteger</span>)index;</span><br></pre></td></tr></table></figure>
+<p>在 RAC，这是一个常见的 ViewModel。<br><code>RACCommand</code> 通常是作为外部的输入信号，VM 根据输入信号执行相应的操作来更新 model，然后就是各种 <code>RACObserve</code> 将信号传递到控制器。整个过程一大半是依赖于 KVO。</p>
+<p>有时候我们也会使用 <code>RACSubject</code>，它既是信号，又是信号的发送者，这里暂不讨论。</p>
+<p>而在 Swift 中，无论是 RAC 的 swift 版本还是 RxSwfit，都已经不再依赖于 KVO，因而上面的方式并不可行。</p>
+<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="comment">// ViewModel</span></span><br><span class="line">signedIn = input.loginTaps.withLatestFrom(usernameAndPassword)</span><br><span class="line">  .flatMapLatest &#123; (username, password) <span class="keyword">in</span></span><br><span class="line">      <span class="keyword">return</span> <span class="type">API</span>.signup(username, password: password)</span><br><span class="line">          .observeOn(<span class="type">MainScheduler</span>.instance)</span><br><span class="line">          .catchErrorJustReturn(<span class="literal">false</span>)</span><br><span class="line">          .trackActivity(signingIn)</span><br><span class="line">  &#125;</span><br><span class="line">  .flatMapLatest &#123; loggedIn -&gt; <span class="type">Observable</span>&lt;<span class="type">Bool</span>&gt; <span class="keyword">in</span></span><br><span class="line">      <span class="keyword">let</span> message = loggedIn ? <span class="string">"Mock: Signed in to GitHub."</span> : <span class="string">"Mock: Sign in to GitHub failed"</span></span><br><span class="line">      <span class="keyword">return</span> wireframe.promptFor(message, cancelAction: <span class="string">"OK"</span>, actions: [])</span><br><span class="line">          <span class="comment">// propagate original value</span></span><br><span class="line">          .<span class="built_in">map</span> &#123; <span class="number">_</span> <span class="keyword">in</span></span><br><span class="line">              loggedIn</span><br><span class="line">          &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  .shareReplay(<span class="number">1</span>)</span><br></pre></td></tr></table></figure>
+<p>这段是 ViewModel 的代码，通过外部传入的 <code>loginTaps</code> 点击信号，直接进行转换生成登陆信号，暴露给外部。整个过程并没有显式的订阅操作，更趋向于流的概念。<br>因此，MVVM 中的 model 感觉被弱化了，model 被转化为信号，成为中间产物。</p>
+<p>所谓的 MVVM，未必就是控制器一定要有对应的 ViewModel。比如对于 TableView，每个 cell 可以有对应的 ViewModel，控制器则可不必再加，过多的层级只会加重维护的难度。</p>
+<h3 id="结尾"><a href="#结尾" class="headerlink" title="结尾"></a>结尾</h3><p>ReactiveCocoa2.0 到 RxSwift 的变化大体就这些。在实际使用 RxSwfit 的过程中，需要摆脱以前对 <code>RACObserve</code> 的依赖，理解一切对象皆是 <code>observable</code>，那么使用起来就会顺手很多。</p>
+
+      
+      
+    </div>
+    <footer class="article-footer">
+      <ul class="article-meta">
+        <li>
+          <span class="label">Published Date:</span>
+          <a href="/2016/06/30/2016-06-30-ReactiveCocoa-to-RxSwfit/" class="article-date">
+  <time datetime="2016-06-30T12:55:00.000Z" itemprop="datePublished">2016-06-30</time>
+</a>
+
+        </li>
+        
+        
+          <li>
+            <span class="label">Tag:</span>
+            
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ReactiveCocoa/">ReactiveCocoa</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/RxSwift/">RxSwift</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/iOS/">iOS</a></li></ul>
+
+
+          </li>
+        
+        <hr/>
+      </ul>
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav" class="article-nav">
+  
+    <a href="/2016/10/13/2016-10-13-HubFramewrok/" id="article-nav-newer" class="article-nav-link-wrap newer">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          HubFramework 的组件化实现
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2016/03/06/2016-03-06-iOS-Theme-manager/" id="article-nav-older" class="article-nav-link-wrap older">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">iOS 主题换肤杂谈</div>
+    </a>
+  
+</nav>
+
+
+  
+</article>
+
+
+
+
+
+
+
+
+
+
+      </div>
+      
+    <footer id="footer" class="post-footer footer">
+      
+      <hr/>
+      <div id="footerContent" class="footer-content">
+        <p>Nathanwhy</p>
+
+
+      </div>
+    </footer>
+
+      
+
+
+
+
+
+
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/typing.js"></script>
+<!--[if lt IE 9]><script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7/html5shiv.min.js"></script><![endif]-->
+
+
+
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-60259195-2', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+
+
+
+    </div>
+  </body>
+</html>

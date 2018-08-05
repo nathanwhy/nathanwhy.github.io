@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  
+  <title>小白级图像反色处理 | Nathanwhy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="###反色处理 前段时间，需要实现一个很简单的图像处理功能，就是将图片反色。 由于只是个小功能，app 也没有其他图片处理的需求，并不希望因此而导入一个庞大的第三方库。 先是看了下 core Image，有个 CIColorInvert 的滤镜，不过最终效果跟预想的有点出入。 其实功能并不是很难，干脆自己实现下。 因为图片事先已经被裁剪处理过，比较小，所以直接用 Core Graphics 进行处">
+<meta name="keywords" content="image">
+<meta property="og:type" content="article">
+<meta property="og:title" content="小白级图像反色处理">
+<meta property="og:url" content="https://nathanwhy.com/2015/09/30/2015-09-30-小白级图像反色处理/index.html">
+<meta property="og:site_name" content="Nathanwhy">
+<meta property="og:description" content="###反色处理 前段时间，需要实现一个很简单的图像处理功能，就是将图片反色。 由于只是个小功能，app 也没有其他图片处理的需求，并不希望因此而导入一个庞大的第三方库。 先是看了下 core Image，有个 CIColorInvert 的滤镜，不过最终效果跟预想的有点出入。 其实功能并不是很难，干脆自己实现下。 因为图片事先已经被裁剪处理过，比较小，所以直接用 Core Graphics 进行处">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://nathanwhy.com/images/post/dogeProcess.png">
+<meta property="og:updated_time" content="2017-04-16T13:33:35.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="小白级图像反色处理">
+<meta name="twitter:description" content="###反色处理 前段时间，需要实现一个很简单的图像处理功能，就是将图片反色。 由于只是个小功能，app 也没有其他图片处理的需求，并不希望因此而导入一个庞大的第三方库。 先是看了下 core Image，有个 CIColorInvert 的滤镜，不过最终效果跟预想的有点出入。 其实功能并不是很难，干脆自己实现下。 因为图片事先已经被裁剪处理过，比较小，所以直接用 Core Graphics 进行处">
+<meta name="twitter:image" content="https://nathanwhy.com/images/post/dogeProcess.png">
+<meta name="twitter:creator" content="@nathanwhy">
+  
+  
+    <link rel="icon" href="images/favicon.ico">
+  
+  <link rel="stylesheet" href="/css/typing.css">
+  <link rel="stylesheet" href="/css/donate.css">
+  
+</head>
+
+  
+    
+      <body>
+    
+  
+      <div id="container" class="container">
+        <article id="post-2015-09-30-小白级图像反色处理" class="article article-type-post" itemscope itemprop="blogPost">
+  <header id="header" class="header">
+    <div class="mobile-nav">
+      <h1 class="nickname">Nathanwhy</h1>
+      <a id="menu">
+        &#9776; Menu
+      </a>
+    </div>
+    
+        <nav id="main-nav" class="main-nav nav-left">
+    
+    
+      <a class="main-nav-link" href="/">Home</a>
+    
+      <a class="main-nav-link" href="/archives">Archives</a>
+    
+      <a class="main-nav-link" href="/about">About</a>
+    
+  </nav>
+</header>
+
+  <hr/>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      小白级图像反色处理
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry typo" itemprop="articleBody">
+      
+        <p>###反色处理</p>
+<p>前段时间，需要实现一个很简单的图像处理功能，就是将图片反色。</p>
+<p>由于只是个小功能，app 也没有其他图片处理的需求，并不希望因此而导入一个庞大的第三方库。</p>
+<p>先是看了下 core Image，有个 <code>CIColorInvert</code> 的滤镜，不过最终效果跟预想的有点出入。</p>
+<p>其实功能并不是很难，干脆自己实现下。</p>
+<p>因为图片事先已经被裁剪处理过，比较小，所以直接用 Core Graphics 进行处理。</p>
+<p>所谓反色，大体理解就是用 255 分别减去 R，G，B。从二进制角度理解就是 0 变 1，1 变 0 。</p>
+<p>那么我们就先得：</p>
+<p>1.遍历图像的每个像素点颜色；</p>
+<p>2.分别取出RGB，求得新的反色值，加上原来的透明度，得到新的像素颜色；</p>
+<p>3.输出新的图片；</p>
+<p>比较关键是第二个步骤，听起来可能有点繁琐，但实际实现起来却很简单。</p>
+<figure class="highlight objc"><table><tr><td class="code"><pre><span class="line"><span class="built_in">UInt32</span> inputColor = *inputPixel;</span><br><span class="line">inputColor = inputColor ^ <span class="number">0xFFFFFF</span>;</span><br></pre></td></tr></table></figure>
+<p>inputColor 获得了指针 inputPixel 指向图像的某一个像素点颜色，由于颜色是由 RBGA 组成的，每一种都是 8 位，所以是 UInt32。</p>
+<p>然后用异或运算符，就实现了步骤2的效果。</p>
+<p>具体代码：</p>
+<figure class="highlight objc"><table><tr><td class="code"><pre><span class="line">- (<span class="built_in">UIImage</span> *)processUsingImage:(<span class="built_in">UIImage</span>*)inputImage &#123;</span><br><span class="line">  </span><br><span class="line">  <span class="built_in">UInt32</span> * inputPixels;</span><br><span class="line">    </span><br><span class="line">  <span class="built_in">CGImageRef</span> inputCGImage = [inputImage <span class="built_in">CGImage</span>];</span><br><span class="line">  <span class="built_in">NSUInteger</span> inputWidth = <span class="built_in">CGImageGetWidth</span>(inputCGImage);</span><br><span class="line">  <span class="built_in">NSUInteger</span> inputHeight = <span class="built_in">CGImageGetHeight</span>(inputCGImage);</span><br><span class="line">  </span><br><span class="line">  <span class="built_in">CGColorSpaceRef</span> colorSpace = <span class="built_in">CGColorSpaceCreateDeviceRGB</span>();</span><br><span class="line">  </span><br><span class="line">  <span class="built_in">NSUInteger</span> bytesPerPixel = <span class="number">4</span>;</span><br><span class="line">  <span class="built_in">NSUInteger</span> bitsPerComponent = <span class="number">8</span>;</span><br><span class="line">  </span><br><span class="line">  <span class="built_in">NSUInteger</span> inputBytesPerRow = bytesPerPixel * inputWidth;</span><br><span class="line">  </span><br><span class="line">  inputPixels = (<span class="built_in">UInt32</span> *)calloc(inputHeight * inputWidth, <span class="keyword">sizeof</span>(<span class="built_in">UInt32</span>));</span><br><span class="line">  </span><br><span class="line">  <span class="built_in">CGContextRef</span> context = <span class="built_in">CGBitmapContextCreate</span>(inputPixels, inputWidth, inputHeight,</span><br><span class="line">                                               bitsPerComponent, inputBytesPerRow, colorSpace,</span><br><span class="line">                                               kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);</span><br><span class="line">  </span><br><span class="line">  <span class="built_in">CGContextDrawImage</span>(context, <span class="built_in">CGRectMake</span>(<span class="number">0</span>, <span class="number">0</span>, inputWidth, inputHeight), inputCGImage);</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">for</span> (<span class="built_in">NSUInteger</span> j = <span class="number">0</span>; j &lt; inputHeight; j++) &#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="built_in">NSUInteger</span> i = <span class="number">0</span>; i &lt; inputWidth; i++) &#123;</span><br><span class="line">        </span><br><span class="line">        <span class="built_in">UInt32</span> * inputPixel = inputPixels + j * inputWidth + i;</span><br><span class="line">        <span class="built_in">UInt32</span> inputColor = *inputPixel;</span><br><span class="line">        inputColor = inputColor ^ <span class="number">0xFFFFFF</span>;</span><br><span class="line">        *inputPixel = inputColor;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="built_in">CGImageRef</span> newCGImage = <span class="built_in">CGBitmapContextCreateImage</span>(context);</span><br><span class="line">  <span class="built_in">UIImage</span> * processedImage = [<span class="built_in">UIImage</span> imageWithCGImage:newCGImage];</span><br><span class="line">  </span><br><span class="line">  <span class="built_in">CGColorSpaceRelease</span>(colorSpace);</span><br><span class="line">  <span class="built_in">CGContextRelease</span>(context);</span><br><span class="line">  free(inputPixels);</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">return</span> processedImage;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/images/post/dogeProcess.png" alt="doge1"></p>
+<p>最后真机实验了下，用裁剪后的小图片进行反色处理，基本感知不到延迟，而用 iPhone5s 处理相机拍摄的原始图片，时间平均在 0.2-0.3 秒上下。需求也用不到原图，只需要处理小图片，基本没问题。而用 core image 的处理时间更长，可能由于效果实现不一样，算法也比较复杂。</p>
+<h3 id="题外话：Swift-的-SIMD"><a href="#题外话：Swift-的-SIMD" class="headerlink" title="题外话：Swift 的 SIMD"></a>题外话：Swift 的 SIMD</h3><p>由于最近看到 <a href="http://www.russbishop.net/swift-2-simd" target="_blank" rel="noopener">Swift 2: SIMD</a>，似乎也可以做一些简单的图形处理。</p>
+<p>比如一个颜色，你要把每个 RGB 的值都降低为原来的一半，那么：</p>
+<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> vec = float3(<span class="number">255.0</span>, <span class="number">255.0</span>, <span class="number">255.0</span>)</span><br><span class="line"><span class="keyword">let</span> matrix = float3x3(</span><br><span class="line">            [float3(<span class="number">0.5</span>, <span class="number">0.0</span>, <span class="number">0.0</span>),</span><br><span class="line">             float3(<span class="number">0.0</span>, <span class="number">0.5</span>, <span class="number">0.0</span>),</span><br><span class="line">             float3(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.5</span>)]</span><br><span class="line">           )</span><br><span class="line">        </span><br><span class="line"><span class="keyword">let</span> result = vec * matrix</span><br></pre></td></tr></table></figure>
+<p>由于是并行计算，执行效率会高很多。</p>
+<p>具体实现可自行尝试，当然真正的图像处理应该还是用 C++。</p>
+
+      
+      
+    </div>
+    <footer class="article-footer">
+      <ul class="article-meta">
+        <li>
+          <span class="label">Published Date:</span>
+          <a href="/2015/09/30/2015-09-30-小白级图像反色处理/" class="article-date">
+  <time datetime="2015-09-30T14:46:27.000Z" itemprop="datePublished">2015-09-30</time>
+</a>
+
+        </li>
+        
+        
+          <li>
+            <span class="label">Tag:</span>
+            
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/image/">image</a></li></ul>
+
+
+          </li>
+        
+        <hr/>
+      </ul>
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav" class="article-nav">
+  
+    <a href="/2015/10/29/2015-10-29-Hot-Signal-and-Cold-Signal-In-ReacticeCocoa/" id="article-nav-newer" class="article-nav-link-wrap newer">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          ReactiveCocoa 2.0 的冷热信号
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2015/07/31/2015-07-31-ReactiveCocoa-3.0-in-MVVM/" id="article-nav-older" class="article-nav-link-wrap older">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">ReactiveCocoa 3.0 in MVVM</div>
+    </a>
+  
+</nav>
+
+
+  
+</article>
+
+
+
+
+
+
+
+
+
+
+      </div>
+      
+    <footer id="footer" class="post-footer footer">
+      
+      <hr/>
+      <div id="footerContent" class="footer-content">
+        <p>Nathanwhy</p>
+
+
+      </div>
+    </footer>
+
+      
+
+
+
+
+
+
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/typing.js"></script>
+<!--[if lt IE 9]><script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7/html5shiv.min.js"></script><![endif]-->
+
+
+
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-60259195-2', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+
+
+
+    </div>
+  </body>
+</html>
