@@ -14,7 +14,7 @@
 <meta property="og:description" content="HubFramework 是 spotify 公司开源的一套组件驱动 UI 框架，可快速构建 UI，可定制化程度较高，同时也可以很轻易地用 Json 数据来动态构建 UI。 HubFramework 是用 Objective-C 写的，同时它完全支持 Swift，其 demo 也是完全由 Swift 实现。 最近 Instagram 刚开源 IGListKit 也是完全用 Objective-C，">
 <meta property="og:locale" content="default">
 <meta property="og:image" content="https://nathanwhy.com/images/post/2016-10-12-image.png">
-<meta property="og:updated_time" content="2016-12-19T06:46:22.000Z">
+<meta property="og:updated_time" content="2018-12-15T11:35:28.003Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="HubFramework 的组件化实现">
 <meta name="twitter:description" content="HubFramework 是 spotify 公司开源的一套组件驱动 UI 框架，可快速构建 UI，可定制化程度较高，同时也可以很轻易地用 Json 数据来动态构建 UI。 HubFramework 是用 Objective-C 写的，同时它完全支持 Swift，其 demo 也是完全由 Swift 实现。 最近 Instagram 刚开源 IGListKit 也是完全用 Objective-C，">
@@ -93,10 +93,8 @@
 <p>Component 在收到 <code>configureViewWithModel:</code> 消息进行渲染，官方推荐尽量用 <code>HUBComponentModel</code> 协议预设的 property，基本可以满足大部分需求。除非需要定制化才使用 customData。</p>
 <p>其中 ComponentModel 还包含 target 对象，用于指定对应的 URI 跳转。</p>
 <h2 id="ContentOperation"><a href="#ContentOperation" class="headerlink" title="ContentOperation"></a>ContentOperation</h2><p>一个 ContentOperationFactory 带有多个 ContentOperation，而这些 ContentOperation 的顺序也决定了内容被加载的顺序。</p>
-<p>比如，有这么些 ContentOperations:</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">contentOperationFactory1</span><br><span class="line">  - contentOperationA1</span><br><span class="line">  - contentOperationB1</span><br><span class="line">contentOperationFactory2</span><br><span class="line">  - contentOperationA2</span><br><span class="line">  - contentOperationB2</span><br></pre></td></tr></table></figure>
-<p>那么他们的加载顺序是</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@[contentOperationA1, contentOperationB1, contentOperationA2, contentOperationB2];</span><br></pre></td></tr></table></figure>
+<p>比如，有这么些 ContentOperations:<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">contentOperationFactory1</span><br><span class="line">  - contentOperationA1</span><br><span class="line">  - contentOperationB1</span><br><span class="line">contentOperationFactory2</span><br><span class="line">  - contentOperationA2</span><br><span class="line">  - contentOperationB2</span><br></pre></td></tr></table></figure></p>
+<p>那么他们的加载顺序是<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@[contentOperationA1, contentOperationB1, contentOperationA2, contentOperationB2];</span><br></pre></td></tr></table></figure></p>
 <p>前者加载完毕，后者才会继续加载。</p>
 <p>既然顺序定好了，便可以制定它的一些特性：</p>
 <ul>

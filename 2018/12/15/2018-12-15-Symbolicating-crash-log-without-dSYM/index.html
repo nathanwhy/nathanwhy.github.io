@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  
+  <title>Symbolicating an iOS crash log without the dSYM file | Nathanwhy</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="文章翻译自 coderwall，内容有些改动。 每次都要上传 dSYM 文件到 bugly，总让我们以为只有 dSYM 才能将 crash log 符号化。然而，其实没有 dSYM 也是可以符号化。 首先，你需要 crash 对应的 ipa 文件，更准确的说是 ipa 解压后的二进制文件。如果你不确定 crash log 对应的是哪个编译版本，你可以将 crash log 中的 UUID 和本地保">
+<meta name="keywords" content="iOS">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Symbolicating an iOS crash log without the dSYM file">
+<meta property="og:url" content="https://nathanwhy.com/2018/12/15/2018-12-15-Symbolicating-crash-log-without-dSYM/index.html">
+<meta property="og:site_name" content="Nathanwhy">
+<meta property="og:description" content="文章翻译自 coderwall，内容有些改动。 每次都要上传 dSYM 文件到 bugly，总让我们以为只有 dSYM 才能将 crash log 符号化。然而，其实没有 dSYM 也是可以符号化。 首先，你需要 crash 对应的 ipa 文件，更准确的说是 ipa 解压后的二进制文件。如果你不确定 crash log 对应的是哪个编译版本，你可以将 crash log 中的 UUID 和本地保">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2018-12-15T11:30:44.837Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Symbolicating an iOS crash log without the dSYM file">
+<meta name="twitter:description" content="文章翻译自 coderwall，内容有些改动。 每次都要上传 dSYM 文件到 bugly，总让我们以为只有 dSYM 才能将 crash log 符号化。然而，其实没有 dSYM 也是可以符号化。 首先，你需要 crash 对应的 ipa 文件，更准确的说是 ipa 解压后的二进制文件。如果你不确定 crash log 对应的是哪个编译版本，你可以将 crash log 中的 UUID 和本地保">
+<meta name="twitter:creator" content="@nathanwhy">
+  
+  
+    <link rel="icon" href="images/favicon.ico">
+  
+  <link rel="stylesheet" href="/css/typing.css">
+  <link rel="stylesheet" href="/css/donate.css">
+  
+</head>
+
+  
+    
+      <body>
+    
+  
+      <div id="container" class="container">
+        <article id="post-2018-12-15-Symbolicating-crash-log-without-dSYM" class="article article-type-post" itemscope itemprop="blogPost">
+  <header id="header" class="header">
+    <div class="mobile-nav">
+      <h1 class="nickname">Nathanwhy</h1>
+      <a id="menu">
+        &#9776; Menu
+      </a>
+    </div>
+    
+        <nav id="main-nav" class="main-nav nav-left">
+    
+    
+      <a class="main-nav-link" href="/">Home</a>
+    
+      <a class="main-nav-link" href="/archives">Archives</a>
+    
+      <a class="main-nav-link" href="/about">About</a>
+    
+  </nav>
+</header>
+
+  <hr/>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Symbolicating an iOS crash log without the dSYM file
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry typo" itemprop="articleBody">
+      
+        <p>文章翻译自 <a href="https://coderwall.com/p/ezdcmg/symbolicating-an-ios-crash-log-without-the-original-dsym-file" target="_blank" rel="noopener">coderwall</a>，内容有些改动。</p>
+<p>每次都要上传 dSYM 文件到 bugly，总让我们以为只有 dSYM 才能将 crash log 符号化。然而，其实没有 dSYM 也是可以符号化。</p>
+<p>首先，你需要 crash 对应的 ipa 文件，更准确的说是 ipa 解压后的二进制文件。<br>如果你不确定 crash log 对应的是哪个编译版本，你可以将 crash log 中的 UUID 和本地保存的 app 二进制文件进行对比。<br>通过这个方式找到 UUID：<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">dwarfdump -u /path/to/MyApp.app/MyApp</span><br></pre></td></tr></table></figure></p>
+<p>你可以先尝试用 <code>symbolicatecrash</code> 对 crash log 进行符号化，这时候你至少能看到系统调用的函数。<br>先试试不带 dSYM 参数的：<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">symbolicatecrash /path/to/MyApp_2012-10-01_Device.crash</span><br></pre></td></tr></table></figure></p>
+<p>如果是带 dSYM 参数的：<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">symbolicatecrash /path/to/MyApp_2012-10-01_Device.crash /path/to/MyApp.app.dSYM</span><br></pre></td></tr></table></figure></p>
+<p>如果可以成功执行，那么你运气很好。下面这几步你也不用看了。</p>
+<p>为了找到 symbolicatecrash，先执行这句：<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">find /Applications/Xcode.app -name symbolicatecrash -type f</span><br></pre></td></tr></table></figure></p>
+<p>然后用上面的结果设置下别名：<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">export DEVELOPER_DIR=&apos;/Applications/Xcode.app/Contents/Developer&apos;</span><br><span class="line"></span><br><span class="line">alias symbolicatecrash=&apos;/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/PrivateFrameworks/DTDeviceKit.framework/Versions/A/Resources/symbolicatecrash&apos;</span><br></pre></td></tr></table></figure></p>
+<p>接下来，使用 atos 符号化每个内存地址。内存地址在 crash log 里，确保选对了对应的 cpu 架构版本，比如 armv7s。<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">atos -arch armv7 -o /path/to/MyApp.app/MyApp 0x0003b508</span><br></pre></td></tr></table></figure></p>
+<p>重复此操作，便能看到对应的所有堆栈。<br>这个很费时，需要搞一个脚本。<br>这里已经有人写了一个，地址<a href="https://juejin.im/post/5b409a405188251ac554d949" target="_blank" rel="noopener">在这</a>，而且还非常清楚地解释了为何不用 dSYM 也可以符号化。<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">1  MyApp  0x0000000001e7acc6 0x000a9000 + 31268038</span><br></pre></td></tr></table></figure></p>
+<p>简单来说，通过函数被调用的动态地址 <code>0x0000000001e7acc6</code> 减去进程基地址 <code>0x000a9000</code>，这样就能获得函数的地址，然后从 app 的二进制文件找到对应函数名，从而符号化。</p>
+
+      
+      
+    </div>
+    <footer class="article-footer">
+      <ul class="article-meta">
+        <li>
+          <span class="label">Published Date:</span>
+          <a href="/2018/12/15/2018-12-15-Symbolicating-crash-log-without-dSYM/" class="article-date">
+  <time datetime="2018-12-15T12:00:00.000Z" itemprop="datePublished">2018-12-15</time>
+</a>
+
+        </li>
+        
+        
+          <li>
+            <span class="label">Tag:</span>
+            
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/iOS/">iOS</a></li></ul>
+
+
+          </li>
+        
+        <hr/>
+      </ul>
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav" class="article-nav">
+  
+    <span id="article-nav-newer" class="article-nav-link-wrap newer"></span>
+  
+  
+    <a href="/2018/08/01/2018-08-01-Download-Xcode-with-Swift/" id="article-nav-older" class="article-nav-link-wrap older">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Download Xcode with Swift</div>
+    </a>
+  
+</nav>
+
+
+  
+</article>
+
+
+
+
+
+
+
+
+
+
+      </div>
+      
+    <footer id="footer" class="post-footer footer">
+      
+      <hr/>
+      <div id="footerContent" class="footer-content">
+        <p>Nathanwhy</p>
+
+
+      </div>
+    </footer>
+
+      
+
+
+
+
+
+
+
+<script src="//cdn.bootcss.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/typing.js"></script>
+<!--[if lt IE 9]><script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7/html5shiv.min.js"></script><![endif]-->
+
+
+
+<!-- Google Analytics -->
+<script type="text/javascript">
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-60259195-2', 'auto');
+ga('send', 'pageview');
+
+</script>
+<!-- End Google Analytics -->
+
+
+
+
+
+    </div>
+  </body>
+</html>

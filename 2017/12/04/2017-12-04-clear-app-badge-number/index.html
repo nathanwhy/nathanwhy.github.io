@@ -5,20 +5,20 @@
   
   <title>Best practice to clear application badges | Nathanwhy</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="一般情况下，我们都会用此方法来消除角标： [UIApplication sharedApplication].applicationIconBadgeNumber = 0; 然而这种方法会使得系统通知栏的历史推送消息全部被清除。 试了下即使用 iOS 10 的消息推送框架 UserNotification 也存在这种情况。 会造成相同效果的还有 [UIApplication sharedAppli">
+  <meta name="description" content="一般情况下，我们都会用此方法来消除角标：[UIApplication sharedApplication].applicationIconBadgeNumber = 0; 然而这种方法会使得系统通知栏的历史推送消息全部被清除。 试了下即使用 iOS 10 的消息推送框架 UserNotification 也存在这种情况。 会造成相同效果的还有[UIApplication sharedApplica">
 <meta name="keywords" content="iOS">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Best practice to clear application badges">
 <meta property="og:url" content="https://nathanwhy.com/2017/12/04/2017-12-04-clear-app-badge-number/index.html">
 <meta property="og:site_name" content="Nathanwhy">
-<meta property="og:description" content="一般情况下，我们都会用此方法来消除角标： [UIApplication sharedApplication].applicationIconBadgeNumber = 0; 然而这种方法会使得系统通知栏的历史推送消息全部被清除。 试了下即使用 iOS 10 的消息推送框架 UserNotification 也存在这种情况。 会造成相同效果的还有 [UIApplication sharedAppli">
+<meta property="og:description" content="一般情况下，我们都会用此方法来消除角标：[UIApplication sharedApplication].applicationIconBadgeNumber = 0; 然而这种方法会使得系统通知栏的历史推送消息全部被清除。 试了下即使用 iOS 10 的消息推送框架 UserNotification 也存在这种情况。 会造成相同效果的还有[UIApplication sharedApplica">
 <meta property="og:locale" content="default">
 <meta property="og:image" content="https://nathanwhy.com/images/post/2017-12-03-notification1.png">
 <meta property="og:image" content="https://nathanwhy.com/images/post/2017-12-03-notification2.png">
-<meta property="og:updated_time" content="2018-06-08T00:44:18.436Z">
+<meta property="og:updated_time" content="2018-12-15T11:34:52.298Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Best practice to clear application badges">
-<meta name="twitter:description" content="一般情况下，我们都会用此方法来消除角标： [UIApplication sharedApplication].applicationIconBadgeNumber = 0; 然而这种方法会使得系统通知栏的历史推送消息全部被清除。 试了下即使用 iOS 10 的消息推送框架 UserNotification 也存在这种情况。 会造成相同效果的还有 [UIApplication sharedAppli">
+<meta name="twitter:description" content="一般情况下，我们都会用此方法来消除角标：[UIApplication sharedApplication].applicationIconBadgeNumber = 0; 然而这种方法会使得系统通知栏的历史推送消息全部被清除。 试了下即使用 iOS 10 的消息推送框架 UserNotification 也存在这种情况。 会造成相同效果的还有[UIApplication sharedApplica">
 <meta name="twitter:image" content="https://nathanwhy.com/images/post/2017-12-03-notification1.png">
 <meta name="twitter:creator" content="@nathanwhy">
   
@@ -73,20 +73,16 @@
     
     <div class="article-entry typo" itemprop="articleBody">
       
-        <p>一般情况下，我们都会用此方法来消除角标：</p>
-<figure class="highlight objc"><table><tr><td class="code"><pre><span class="line">[<span class="built_in">UIApplication</span> sharedApplication].applicationIconBadgeNumber = <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+        <p>一般情况下，我们都会用此方法来消除角标：<br><figure class="highlight objc"><table><tr><td class="code"><pre><span class="line">[<span class="built_in">UIApplication</span> sharedApplication].applicationIconBadgeNumber = <span class="number">0</span>;</span><br></pre></td></tr></table></figure></p>
 <p>然而这种方法会使得系统通知栏的历史推送消息全部被清除。</p>
 <p>试了下即使用 iOS 10 的消息推送框架 <code>UserNotification</code> 也存在这种情况。</p>
-<p>会造成相同效果的还有</p>
-<figure class="highlight objc"><table><tr><td class="code"><pre><span class="line">[<span class="built_in">UIApplication</span> sharedApplication].scheduledLocalNotifications = <span class="literal">nil</span>;</span><br></pre></td></tr></table></figure>
-<p>解决方案：</p>
-<figure class="highlight objc"><table><tr><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)applicationDidEnterBackground:(<span class="built_in">UIApplication</span> *)application &#123;</span><br><span class="line">    <span class="built_in">UILocalNotification</span> *clearEpisodeNotification = [[<span class="built_in">UILocalNotification</span> alloc] init];</span><br><span class="line">    clearEpisodeNotification.fireDate = [<span class="built_in">NSDate</span> dateWithTimeIntervalSinceNow:<span class="number">1</span>];</span><br><span class="line">    clearEpisodeNotification.timeZone = [<span class="built_in">NSTimeZone</span> systemTimeZone];</span><br><span class="line">    clearEpisodeNotification.applicationIconBadgeNumber = <span class="number">-1</span>;</span><br><span class="line">    [[<span class="built_in">UIApplication</span> sharedApplication] scheduleLocalNotification: clearEpisodeNotification];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>会造成相同效果的还有<br><figure class="highlight objc"><table><tr><td class="code"><pre><span class="line">[<span class="built_in">UIApplication</span> sharedApplication].scheduledLocalNotifications = <span class="literal">nil</span>;</span><br></pre></td></tr></table></figure></p>
+<p>解决方案：<br><figure class="highlight objc"><table><tr><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)applicationDidEnterBackground:(<span class="built_in">UIApplication</span> *)application &#123;</span><br><span class="line">    <span class="built_in">UILocalNotification</span> *clearEpisodeNotification = [[<span class="built_in">UILocalNotification</span> alloc] init];</span><br><span class="line">    clearEpisodeNotification.fireDate = [<span class="built_in">NSDate</span> dateWithTimeIntervalSinceNow:<span class="number">1</span>];</span><br><span class="line">    clearEpisodeNotification.timeZone = [<span class="built_in">NSTimeZone</span> systemTimeZone];</span><br><span class="line">    clearEpisodeNotification.applicationIconBadgeNumber = <span class="number">-1</span>;</span><br><span class="line">    [[<span class="built_in">UIApplication</span> sharedApplication] scheduleLocalNotification: clearEpisodeNotification];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>在程序退到后台后，添加该通知。<br>关键的地方在于 applicationIconBadgeNumber 是 -1。<br>接着你可以看到红点带着动画优雅地消失了，<br>同时，历史推送消息被保留了下来。</p>
 <p>不过，上述这个方式到 iOS 11 就失效了。<br>本来以为没辙了，直到发现某个新闻客户端仍然可以实现。</p>
 <p>于是，我反编译了该新闻客户端。<br>从 <code>applicationDidEnterBackground</code> 入手，很快就找到了相关代码。</p>
 <p><img src="/images/post/2017-12-03-notification1.png" alt="image"><br><img src="/images/post/2017-12-03-notification2.png" alt="image"></p>
-<p>那么答案就出来了，直接使用 <code>UserNotifications</code> 即可，猜测 badge 应该还是 -1。</p>
-<figure class="highlight objc"><table><tr><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)applicationDidEnterBackground:(<span class="built_in">UIApplication</span> *)application &#123;</span><br><span class="line">    UNMutableNotificationContent *content = [[UNMutableNotificationContent alloc] init];</span><br><span class="line">    content.badge = @(<span class="number">-1</span>);</span><br><span class="line">    UNNotificationRequest *request = [UNNotificationRequest requestWithIdentifier:<span class="string">@"clearBadge"</span> content:content trigger:<span class="literal">nil</span>];</span><br><span class="line">    [[UNUserNotificationCenter currentNotificationCenter] addNotificationRequest:request withCompletionHandler:^(<span class="built_in">NSError</span> * _Nullable error) &#123;</span><br><span class="line">    &#125;];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>那么答案就出来了，直接使用 <code>UserNotifications</code> 即可，猜测 badge 应该还是 -1。<br><figure class="highlight objc"><table><tr><td class="code"><pre><span class="line">- (<span class="keyword">void</span>)applicationDidEnterBackground:(<span class="built_in">UIApplication</span> *)application &#123;</span><br><span class="line">    UNMutableNotificationContent *content = [[UNMutableNotificationContent alloc] init];</span><br><span class="line">    content.badge = @(<span class="number">-1</span>);</span><br><span class="line">    UNNotificationRequest *request = [UNNotificationRequest requestWithIdentifier:<span class="string">@"clearBadge"</span> content:content trigger:<span class="literal">nil</span>];</span><br><span class="line">    [[UNUserNotificationCenter currentNotificationCenter] addNotificationRequest:request withCompletionHandler:^(<span class="built_in">NSError</span> * _Nullable error) &#123;</span><br><span class="line">    &#125;];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>最后记得不要设置 title，否则会收到空白通知。</p>
 <p>参考资料：<br><a href="https://stackoverflow.com/questions/5375355/clear-app-badge-with-local-notifications" target="_blank" rel="noopener">https://stackoverflow.com/questions/5375355/clear-app-badge-with-local-notifications</a></p>
 
