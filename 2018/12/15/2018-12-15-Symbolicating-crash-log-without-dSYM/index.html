@@ -13,7 +13,7 @@
 <meta property="og:site_name" content="Nathanwhy">
 <meta property="og:description" content="文章翻译自 coderwall，内容有些改动。 每次都要上传 dSYM 文件到 bugly，总让我们以为只有 dSYM 才能将 crash log 符号化。然而，其实没有 dSYM 也是可以符号化。 首先，你需要 crash 对应的 ipa 文件，更准确的说是 ipa 解压后的二进制文件。如果你不确定 crash log 对应的是哪个编译版本，你可以将 crash log 中的 UUID 和本地保">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2018-12-15T11:30:44.837Z">
+<meta property="og:updated_time" content="2018-12-15T11:40:20.345Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Symbolicating an iOS crash log without the dSYM file">
 <meta name="twitter:description" content="文章翻译自 coderwall，内容有些改动。 每次都要上传 dSYM 文件到 bugly，总让我们以为只有 dSYM 才能将 crash log 符号化。然而，其实没有 dSYM 也是可以符号化。 首先，你需要 crash 对应的 ipa 文件，更准确的说是 ipa 解压后的二进制文件。如果你不确定 crash log 对应的是哪个编译版本，你可以将 crash log 中的 UUID 和本地保">
@@ -78,7 +78,7 @@
 <p>如果可以成功执行，那么你运气很好。下面这几步你也不用看了。</p>
 <p>为了找到 symbolicatecrash，先执行这句：<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">find /Applications/Xcode.app -name symbolicatecrash -type f</span><br></pre></td></tr></table></figure></p>
 <p>然后用上面的结果设置下别名：<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">export DEVELOPER_DIR=&apos;/Applications/Xcode.app/Contents/Developer&apos;</span><br><span class="line"></span><br><span class="line">alias symbolicatecrash=&apos;/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/Library/PrivateFrameworks/DTDeviceKit.framework/Versions/A/Resources/symbolicatecrash&apos;</span><br></pre></td></tr></table></figure></p>
-<p>接下来，使用 atos 符号化每个内存地址。内存地址在 crash log 里，确保选对了对应的 cpu 架构版本，比如 armv7s。<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">atos -arch armv7 -o /path/to/MyApp.app/MyApp 0x0003b508</span><br></pre></td></tr></table></figure></p>
+<p>接下来，使用 <code>atos</code> 符号化每个内存地址。内存地址在 crash log 里，确保选对了对应的 cpu 架构版本，比如 armv7s。<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">atos -arch armv7 -o /path/to/MyApp.app/MyApp 0x0003b508</span><br></pre></td></tr></table></figure></p>
 <p>重复此操作，便能看到对应的所有堆栈。<br>这个很费时，需要搞一个脚本。<br>这里已经有人写了一个，地址<a href="https://juejin.im/post/5b409a405188251ac554d949" target="_blank" rel="noopener">在这</a>，而且还非常清楚地解释了为何不用 dSYM 也可以符号化。<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">1  MyApp  0x0000000001e7acc6 0x000a9000 + 31268038</span><br></pre></td></tr></table></figure></p>
 <p>简单来说，通过函数被调用的动态地址 <code>0x0000000001e7acc6</code> 减去进程基地址 <code>0x000a9000</code>，这样就能获得函数的地址，然后从 app 的二进制文件找到对应函数名，从而符号化。</p>
 
