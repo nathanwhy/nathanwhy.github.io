@@ -6,10 +6,10 @@
   <title>实现 twitter iOS app UI | Nathanwhy</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="本文章翻译自Yari D’areglia 在使用了 Twitter 的 iOS 应用一段时间后，我开始以开发者的眼光，注意到它副标题的移动，控件的交互非常有意思。这激起了我的好奇心，Twitter 开发者是怎么实现的？ 让我们先大概看下效果图，是不是相当的优雅？看起来就像系统默认的图，但是如果你仔细看的话，你会发现更多。视图有重叠，整体随着 ScrollView 滑动放大缩小，协调流畅地变换… 我">
-<meta name="keywords" content="Swift">
+<meta name="keywords" content="Swift,iOS">
 <meta property="og:type" content="article">
 <meta property="og:title" content="实现 twitter iOS app UI">
-<meta property="og:url" content="https://nathanwhy.com/2015/03/02/2015-03-02-实现twitter iOS app UI/index.html">
+<meta property="og:url" content="https://nathanwhy.com/2015/03/02/2015-03-02-implementing-the-twitter-ios-app-ui/index.html">
 <meta property="og:site_name" content="Nathanwhy">
 <meta property="og:description" content="本文章翻译自Yari D’areglia 在使用了 Twitter 的 iOS 应用一段时间后，我开始以开发者的眼光，注意到它副标题的移动，控件的交互非常有意思。这激起了我的好奇心，Twitter 开发者是怎么实现的？ 让我们先大概看下效果图，是不是相当的优雅？看起来就像系统默认的图，但是如果你仔细看的话，你会发现更多。视图有重叠，整体随着 ScrollView 滑动放大缩小，协调流畅地变换… 我">
 <meta property="og:locale" content="default">
@@ -17,7 +17,7 @@
 <meta property="og:image" content="https://nathanwhy.com/images/post/2015-03-01-layers.png">
 <meta property="og:image" content="https://nathanwhy.com/images/post/shame1.png">
 <meta property="og:image" content="https://nathanwhy.com/images/post/shame2.png">
-<meta property="og:updated_time" content="2017-04-16T13:22:31.000Z">
+<meta property="og:updated_time" content="2019-02-17T08:19:30.218Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="实现 twitter iOS app UI">
 <meta name="twitter:description" content="本文章翻译自Yari D’areglia 在使用了 Twitter 的 iOS 应用一段时间后，我开始以开发者的眼光，注意到它副标题的移动，控件的交互非常有意思。这激起了我的好奇心，Twitter 开发者是怎么实现的？ 让我们先大概看下效果图，是不是相当的优雅？看起来就像系统默认的图，但是如果你仔细看的话，你会发现更多。视图有重叠，整体随着 ScrollView 滑动放大缩小，协调流畅地变换… 我">
@@ -38,7 +38,7 @@
     
   
       <div id="container" class="container">
-        <article id="post-2015-03-02-实现twitter iOS app UI" class="article article-type-post" itemscope itemprop="blogPost">
+        <article id="post-2015-03-02-implementing-the-twitter-ios-app-ui" class="article article-type-post" itemscope itemprop="blogPost">
   <header id="header" class="header">
     <div class="mobile-nav">
       <h1 class="nickname">Nathanwhy</h1>
@@ -81,13 +81,11 @@
 <p>让我们开始试试！</p>
 <p>首先，先看看这次实现的最终效果图：</p>
 <p><img src="/images/post/review.gif" alt="preview"></p>
-<p>###结构描述</p>
-<p>在我们探究代码之前，先看看 UI 的结构。</p>
+<h3 id="结构描述"><a href="#结构描述" class="headerlink" title="结构描述"></a>结构描述</h3><p>在我们探究代码之前，先看看 UI 的结构。</p>
 <p>先查看 Main.storyboard 文件。这 ViewController 可以看到两个物体。第一个是头部（包括白色 label），第二个是 scrollView，包含头像和其他相关信息（用户名和关注按钮）。最后底部有一个叫做 Sizer 的 view ，只是为了增加 ScrollView 的内容，以便能够竖直地滑动。</p>
 <p><img src="/images/post/2015-03-01-layers.png" alt="layers"></p>
 <p>就像你看到的，这个结构非常的简单。只要你注意到头部是在 ScrollView 之外的，而不是和其他视图放在一起。这样使整个结构更加的灵活，便于修改。</p>
-<p>###LET’S CODE</p>
-<p>如果你看了最终的效果图，有2个效果你应该可以轻松实现：</p>
+<h3 id="LET’S-CODE"><a href="#LET’S-CODE" class="headerlink" title="LET’S CODE"></a>LET’S CODE</h3><p>如果你看了最终的效果图，有2个效果你应该可以轻松实现：</p>
 <ul>
 <li>1）下拉（当 ScrollView 已经滑到最顶部）</li>
 <li>2）上下滑动</li>
@@ -100,46 +98,32 @@
 <li>2.4）当写着用户姓名的 label 到达 header，一个新的白色 label 就显示在 header 的中间。header 的图片产生毛玻璃效果。</li>
 </ul>
 <p>打开 ViewController.swift，让我们开始一步步实现。</p>
-<p>###创建控制器</p>
-<p>很明显，首先我们需要获得 Scrollview 的偏移 offset，这通过 <code>UIScrollViewDelegate</code> 的代理方法 <code>scrollViewDidScroll</code> 很容易实现。</p>
+<h3 id="创建控制器"><a href="#创建控制器" class="headerlink" title="创建控制器"></a>创建控制器</h3><p>很明显，首先我们需要获得 Scrollview 的偏移 offset，这通过 <code>UIScrollViewDelegate</code> 的代理方法 <code>scrollViewDidScroll</code> 很容易实现。</p>
 <p>对 view 实现大小变换，最简单就是使用 <code>Core Animation</code> 实现同类型的3D变换，将新的值赋予 <code>layer.transform</code> 属性即可。</p>
 <p>这里有一篇关于 core Animation 的文章，有兴趣的话可以看看：</p>
-<p>这是在 <code>scrollViewDidScroll</code> 方法下代码的前几行：</p>
-<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> offset = scrollView.contentOffset.y</span><br><span class="line"><span class="keyword">var</span> avatarTransform = <span class="type">CATransform3DIdentity</span></span><br><span class="line"><span class="keyword">var</span> headerTransform = <span class="type">CATransform3DIdentity</span></span><br></pre></td></tr></table></figure>
+<p>这是在 <code>scrollViewDidScroll</code> 方法下代码的前几行：<br><figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> offset = scrollView.contentOffset.y</span><br><span class="line"><span class="keyword">var</span> avatarTransform = <span class="type">CATransform3DIdentity</span></span><br><span class="line"><span class="keyword">var</span> headerTransform = <span class="type">CATransform3DIdentity</span></span><br></pre></td></tr></table></figure></p>
 <p>这里我们获得竖直方向上的 offset，然后初始化 2个 transformation，后面会用到。</p>
-<p>###下拉</p>
-<p>开始下拉操作：</p>
-<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> offset &lt; <span class="number">0</span> &#123;</span><br><span class="line"> </span><br><span class="line">     <span class="keyword">let</span> headerScaleFactor:<span class="type">CGFloat</span> = -(offset) / header.bounds.height</span><br><span class="line">     <span class="keyword">let</span> headerSizevariation = ((header.bounds.height * (<span class="number">1.0</span> + headerScaleFactor)) - header.bounds.height)/<span class="number">2.0</span></span><br><span class="line">     headerTransform = <span class="type">CATransform3DTranslate</span>(headerTransform, <span class="number">0</span>, headerSizevariation, <span class="number">0</span>)</span><br><span class="line">     headerTransform = <span class="type">CATransform3DScale</span>(headerTransform, <span class="number">1.0</span> + headerScaleFactor, <span class="number">1.0</span> + headerScaleFactor, <span class="number">0</span>)</span><br><span class="line"> </span><br><span class="line">     header.layer.transform = headerTransform</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="下拉"><a href="#下拉" class="headerlink" title="下拉"></a>下拉</h3><p>开始下拉操作：<br><figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> offset &lt; <span class="number">0</span> &#123;</span><br><span class="line"> </span><br><span class="line">     <span class="keyword">let</span> headerScaleFactor:<span class="type">CGFloat</span> = -(offset) / header.bounds.height</span><br><span class="line">     <span class="keyword">let</span> headerSizevariation = ((header.bounds.height * (<span class="number">1.0</span> + headerScaleFactor)) - header.bounds.height)/<span class="number">2.0</span></span><br><span class="line">     headerTransform = <span class="type">CATransform3DTranslate</span>(headerTransform, <span class="number">0</span>, headerSizevariation, <span class="number">0</span>)</span><br><span class="line">     headerTransform = <span class="type">CATransform3DScale</span>(headerTransform, <span class="number">1.0</span> + headerScaleFactor, <span class="number">1.0</span> + headerScaleFactor, <span class="number">0</span>)</span><br><span class="line"> </span><br><span class="line">     header.layer.transform = headerTransform</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>首先确认 <code>offset.y</code> 是否是负值的，这意味着下拉操作开始，header图片开始放大。<br>剩下的就是简单的数学计算了。</p>
 <p>headerScaleFactor 通过比例关系计算而来。也就是说偏移量为 header高度的2倍，那么 ScaleFactor 就为2.0。<br>只要注意它的顶部到屏幕边缘的距离是固定的，图片按比例放大。</p>
 <p>第二个部分我们需要处理上下滑动。让我们看看如何一个一个实现。</p>
-<p>###header（第一阶段）</p>
-<p>现在当前的偏移是大于0的。头部需要随着偏移竖直地滑动，知道达到预定的高度（这个在后面“毛玻璃”会讲到）。</p>
-<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line">headerTransform = <span class="type">CATransform3DTranslate</span>(headerTransform, <span class="number">0</span>, <span class="built_in">max</span>(-offset_HeaderStop, -offset), <span class="number">0</span>)</span><br></pre></td></tr></table></figure>
+<h3 id="header（第一阶段）"><a href="#header（第一阶段）" class="headerlink" title="header（第一阶段）"></a>header（第一阶段）</h3><p>现在当前的偏移是大于0的。头部需要随着偏移竖直地滑动，知道达到预定的高度（这个在后面“毛玻璃”会讲到）。<br><figure class="highlight swift"><table><tr><td class="code"><pre><span class="line">headerTransform = <span class="type">CATransform3DTranslate</span>(headerTransform, <span class="number">0</span>, <span class="built_in">max</span>(-offset_HeaderStop, -offset), <span class="number">0</span>)</span><br></pre></td></tr></table></figure></p>
 <p>这次代码相当简单。只要移动header到预定的位置。</p>
 <p>说起来惭愧，我太懒了，把一些值写死，比如 offset_HeaderStop。应该有更优雅地写法来计算控件的位置。</p>
-<p>###头像（avatar）</p>
-<p>头像缩放跟我们的下拉操作是相同的逻辑。但在这个例子，头像的底部固定而不是顶部。这里代码很相似，除了缩放动画。</p>
-<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="comment">// Avatar -----------</span></span><br><span class="line"> </span><br><span class="line"><span class="keyword">let</span> avatarScaleFactor = (<span class="built_in">min</span>(offset_HeaderStop, offset)) / avatarImage.bounds.height / <span class="number">1.4</span> <span class="comment">// Slow down the animation</span></span><br><span class="line"><span class="keyword">let</span> avatarSizeVariation = ((avatarImage.bounds.height * (<span class="number">1.0</span> + avatarScaleFactor)) - avatarImage.bounds.height) / <span class="number">2.0</span></span><br><span class="line">avatarTransform = <span class="type">CATransform3DTranslate</span>(avatarTransform, <span class="number">0</span>, avatarSizeVariation, <span class="number">0</span>)</span><br><span class="line">avatarTransform = <span class="type">CATransform3DScale</span>(avatarTransform, <span class="number">1.0</span> - avatarScaleFactor, <span class="number">1.0</span> - avatarScaleFactor, <span class="number">0</span>)</span><br></pre></td></tr></table></figure>
+<h3 id="头像（avatar）"><a href="#头像（avatar）" class="headerlink" title="头像（avatar）"></a>头像（avatar）</h3><p>头像缩放跟我们的下拉操作是相同的逻辑。但在这个例子，头像的底部固定而不是顶部。这里代码很相似，除了缩放动画。<br><figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="comment">// Avatar -----------</span></span><br><span class="line"> </span><br><span class="line"><span class="keyword">let</span> avatarScaleFactor = (<span class="built_in">min</span>(offset_HeaderStop, offset)) / avatarImage.bounds.height / <span class="number">1.4</span> <span class="comment">// Slow down the animation</span></span><br><span class="line"><span class="keyword">let</span> avatarSizeVariation = ((avatarImage.bounds.height * (<span class="number">1.0</span> + avatarScaleFactor)) - avatarImage.bounds.height) / <span class="number">2.0</span></span><br><span class="line">avatarTransform = <span class="type">CATransform3DTranslate</span>(avatarTransform, <span class="number">0</span>, avatarSizeVariation, <span class="number">0</span>)</span><br><span class="line">avatarTransform = <span class="type">CATransform3DScale</span>(avatarTransform, <span class="number">1.0</span> - avatarScaleFactor, <span class="number">1.0</span> - avatarScaleFactor, <span class="number">0</span>)</span><br></pre></td></tr></table></figure></p>
 <p>如你所见，我们使用了 <code>min</code> 函数去停止头像缩放，当 header 变换停止的时候。</p>
-<p>这里，我们根据偏移来判断哪个图层放在最前面。</p>
-<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> offset &lt;= offset_HeaderStop &#123;</span><br><span class="line"> </span><br><span class="line">     <span class="keyword">if</span> avatarImage.layer.zPosition &lt; header.layer.zPosition&#123;</span><br><span class="line">         header.layer.zPosition = <span class="number">0</span></span><br><span class="line">     &#125;</span><br><span class="line"> </span><br><span class="line"> &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">     <span class="keyword">if</span> avatarImage.layer.zPosition &gt;= header.layer.zPosition&#123;</span><br><span class="line">         header.layer.zPosition = <span class="number">2</span></span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
-<p>###白色label</p>
-<p>这个是白色 label 的动画</p>
-<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> labelTransform = <span class="type">CATransform3DMakeTranslation</span>(<span class="number">0</span>, <span class="built_in">max</span>(-distance_W_LabelHeader, offset_B_LabelHeader - offset), <span class="number">0</span>)</span><br><span class="line">headerLabel.layer.transform = labelTransform</span><br></pre></td></tr></table></figure>
+<p>这里，我们根据偏移来判断哪个图层放在最前面。<br><figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> offset &lt;= offset_HeaderStop &#123;</span><br><span class="line"> </span><br><span class="line">     <span class="keyword">if</span> avatarImage.layer.zPosition &lt; header.layer.zPosition&#123;</span><br><span class="line">         header.layer.zPosition = <span class="number">0</span></span><br><span class="line">     &#125;</span><br><span class="line"> </span><br><span class="line"> &#125;<span class="keyword">else</span> &#123;</span><br><span class="line">     <span class="keyword">if</span> avatarImage.layer.zPosition &gt;= header.layer.zPosition&#123;</span><br><span class="line">         header.layer.zPosition = <span class="number">2</span></span><br><span class="line">     &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="白色label"><a href="#白色label" class="headerlink" title="白色label"></a>白色label</h3><p>这个是白色 label 的动画<br><figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="keyword">let</span> labelTransform = <span class="type">CATransform3DMakeTranslation</span>(<span class="number">0</span>, <span class="built_in">max</span>(-distance_W_LabelHeader, offset_B_LabelHeader - offset), <span class="number">0</span>)</span><br><span class="line">headerLabel.layer.transform = labelTransform</span><br></pre></td></tr></table></figure></p>
 <p>这里有2个写死的变量（羞愧。。）：当偏移量为  offset_B_LabelHeader，黑色用户名的 label 到达了 header 的底部。</p>
 <p><img src="/images/post/shame1.png" alt="shame1"></p>
 <p>distance_W_LabelHeader 是 header 底部到白色 label 中心的距离。</p>
 <p><img src="/images/post/shame2.png" alt="shame2"></p>
-<p>变换计算的逻辑是：当黑色 label 接触到 header，白色 label 显示，当到达 header 的中心停止。</p>
-<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="built_in">max</span>(-distance_W_LabelHeader, offset_B_LabelHeader - offset)</span><br></pre></td></tr></table></figure>
-<p>###毛玻璃<br>最后一个效果是头部的毛玻璃。我找了3个不同的库去解决这个问题，甚至尝试过超级简单的 openGL ES -_-。但是实时更新毛玻璃效果总会存在延迟现象。</p>
+<p>变换计算的逻辑是：当黑色 label 接触到 header，白色 label 显示，当到达 header 的中心停止。<br><figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="built_in">max</span>(-distance_W_LabelHeader, offset_B_LabelHeader - offset)</span><br></pre></td></tr></table></figure></p>
+<h3 id="毛玻璃"><a href="#毛玻璃" class="headerlink" title="毛玻璃"></a>毛玻璃</h3><p>最后一个效果是头部的毛玻璃。我找了3个不同的库去解决这个问题，甚至尝试过超级简单的 openGL ES -_-。但是实时更新毛玻璃效果总会存在延迟现象。</p>
 <p>机智的我发现，只要计算毛玻璃效果一次，然后覆盖在未转化的图片上，改变它的透明度即可。相信 Twitter 的开发者也是这么实现的。</p>
-<p>在 <code>viewDidAppear</code> 下，我们计算出了毛玻璃效果的 header，然后设置透明度为0，隐藏它：</p>
-<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="comment">// Header - Blurred Image</span></span><br><span class="line"> </span><br><span class="line">headerBlurImageView = <span class="type">UIImageView</span>(frame: header.bounds)</span><br><span class="line">headerBlurImageView?.image = <span class="type">UIImage</span>(named: <span class="string">"header_bg"</span>)?.blurredImageWithRadius(<span class="number">10</span>, iterations: <span class="number">20</span>, tintColor: <span class="type">UIColor</span>.clearColor())</span><br><span class="line">headerBlurImageView?.contentMode = <span class="type">UIViewContentMode</span>.<span class="type">ScaleAspectFill</span></span><br><span class="line">headerBlurImageView?.alpha = <span class="number">0.0</span></span><br><span class="line">header.insertSubview(headerBlurImageView, belowSubview: headerLabel)</span><br></pre></td></tr></table></figure>
+<p>在 <code>viewDidAppear</code> 下，我们计算出了毛玻璃效果的 header，然后设置透明度为0，隐藏它：<br><figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="comment">// Header - Blurred Image</span></span><br><span class="line"> </span><br><span class="line">headerBlurImageView = <span class="type">UIImageView</span>(frame: header.bounds)</span><br><span class="line">headerBlurImageView?.image = <span class="type">UIImage</span>(named: <span class="string">"header_bg"</span>)?.blurredImageWithRadius(<span class="number">10</span>, iterations: <span class="number">20</span>, tintColor: <span class="type">UIColor</span>.clearColor())</span><br><span class="line">headerBlurImageView?.contentMode = <span class="type">UIViewContentMode</span>.<span class="type">ScaleAspectFill</span></span><br><span class="line">headerBlurImageView?.alpha = <span class="number">0.0</span></span><br><span class="line">header.insertSubview(headerBlurImageView, belowSubview: headerLabel)</span><br></pre></td></tr></table></figure></p>
 <p>blurred view 这个 view 使用了第三方库 <a href="https://github.com/nicklockwood/FXBlurView" target="_blank" rel="noopener">FBBlurView</a></p>
-<p>在 <code>scrollViewDidScroll</code> 方法下，我们根据 offset 更改透明度即可。</p>
-<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line">headerBlurImageView?.alpha = <span class="built_in">min</span> (<span class="number">1.0</span>, (offset - offset_B_LabelHeader)/distance_W_LabelHeader)</span><br></pre></td></tr></table></figure>
+<p>在 <code>scrollViewDidScroll</code> 方法下，我们根据 offset 更改透明度即可。<br><figure class="highlight swift"><table><tr><td class="code"><pre><span class="line">headerBlurImageView?.alpha = <span class="built_in">min</span> (<span class="number">1.0</span>, (offset - offset_B_LabelHeader)/distance_W_LabelHeader)</span><br></pre></td></tr></table></figure></p>
 <p>这个计算的逻辑就是要使最大值不超过1，毛玻璃效果必须在黑色label到达头部的时候开始变化，当白色label在最终位置的时候停止变化。</p>
 <p>这就是全部</p>
 <p>希望你能享受这个教学过程。学习如何重新实现有趣的动画效果对我来说相当有意思。</p>
@@ -152,7 +136,7 @@
       <ul class="article-meta">
         <li>
           <span class="label">Published Date:</span>
-          <a href="/2015/03/02/2015-03-02-实现twitter iOS app UI/" class="article-date">
+          <a href="/2015/03/02/2015-03-02-implementing-the-twitter-ios-app-ui/" class="article-date">
   <time datetime="2015-03-02T14:15:33.000Z" itemprop="datePublished">2015-03-02</time>
 </a>
 
@@ -162,7 +146,7 @@
           <li>
             <span class="label">Tag:</span>
             
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Swift/">Swift</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Swift/">Swift</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/iOS/">iOS</a></li></ul>
 
 
           </li>

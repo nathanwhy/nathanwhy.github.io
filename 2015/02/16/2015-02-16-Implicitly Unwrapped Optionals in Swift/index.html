@@ -13,7 +13,7 @@
 <meta property="og:site_name" content="Nathanwhy">
 <meta property="og:description" content="文章翻译自 Command Shift 的 Implicitly Unwrapped Optionals in Swift Implicitly Unwrapped Optionals(隐式解包可选值) 乍看之下可能没有意义，它是一个可选值，但是你总是要假定它是否有值，为啥还要这么个东西？ 根据这些年的工作经历，对属性最主要的使用是 set 方法，而不是初始化。这非常适合 Cocoa 对象的生命周">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2017-04-16T13:22:24.000Z">
+<meta property="og:updated_time" content="2019-02-17T07:56:26.286Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Implicitly Unwrapped Optionals in Swift">
 <meta name="twitter:description" content="文章翻译自 Command Shift 的 Implicitly Unwrapped Optionals in Swift Implicitly Unwrapped Optionals(隐式解包可选值) 乍看之下可能没有意义，它是一个可选值，但是你总是要假定它是否有值，为啥还要这么个东西？ 根据这些年的工作经历，对属性最主要的使用是 set 方法，而不是初始化。这非常适合 Cocoa 对象的生命周">
@@ -73,11 +73,9 @@
         <p>文章翻译自 Command Shift 的 <a href="http://commandshift.co.uk/blog/2014/07/20/swift-implicitly-unwrapped-optionals/" target="_blank" rel="noopener">Implicitly Unwrapped Optionals in Swift</a></p>
 <p>Implicitly Unwrapped Optionals(隐式解包可选值) 乍看之下可能没有意义，它是一个可选值，但是你总是要假定它是否有值，为啥还要这么个东西？</p>
 <p>根据这些年的工作经历，对属性最主要的使用是 set 方法，而不是初始化。这非常适合 Cocoa 对象的生命周期。例如，<code>view</code> ，以及你在 <code>loadview</code> 或 <code>viewdidload</code> 方法下创建的 subviews，他们会被延迟加载，其时间点并不跟 <code>viewController</code> 被初始化的时间点一致。</p>
-<p>如果 outlets 被声明为 <code>var</code> 属性，通常会设置一个初始值，或者设置一个初始化方法，否则编译器不会通过，设置属性类型为 optional 将不再需要这个要求，因为 optional 有一个默认的 <code>.None</code> 值，然后在代码里你必须对它进行解包。</p>
-<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> label : <span class="type">UILabel</span>?</span><br><span class="line">...</span><br><span class="line">label!.text = <span class="string">"Unwrapped label"</span></span><br></pre></td></tr></table></figure>
+<p>如果 outlets 被声明为 <code>var</code> 属性，通常会设置一个初始值，或者设置一个初始化方法，否则编译器不会通过，设置属性类型为 optional 将不再需要这个要求，因为 optional 有一个默认的 <code>.None</code> 值，然后在代码里你必须对它进行解包。<br><figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> label : <span class="type">UILabel</span>?</span><br><span class="line">...</span><br><span class="line">label!.text = <span class="string">"Unwrapped label"</span></span><br></pre></td></tr></table></figure></p>
 <p>这个是可行的，但是太难看了。</p>
-<p>将属性设置为 Implicitly Unwrapped Optional 可读性更强，且功能一样。</p>
-<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> label: <span class="type">UILabel</span>!</span><br><span class="line">...</span><br><span class="line">label.text = <span class="string">"Unwrapped label"</span></span><br></pre></td></tr></table></figure>
+<p>将属性设置为 Implicitly Unwrapped Optional 可读性更强，且功能一样。<br><figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> label: <span class="type">UILabel</span>!</span><br><span class="line">...</span><br><span class="line">label.text = <span class="string">"Unwrapped label"</span></span><br></pre></td></tr></table></figure></p>
 <p>这不仅仅用于 UI 组件，任何你想要传递给另一个对象，但是没有初始化方法，最好也设置成 Implicitly Unwrapped Optional。苹果文档是这么说的：</p>
 <blockquote>
 <p>“When you declare an outlet in Swift, you should make the type of the outlet an implicitly unwrapped optional. This way, you can let the storyboard connect the outlets at runtime, after initialization. When your class is initialized from a storyboard or xib file, you can assume that the outlet has been connected.”</p>
@@ -85,8 +83,7 @@
 <blockquote>
 <p>Excerpt From: Apple Inc. “Using Swift with Cocoa and Objective-C.”</p>
 </blockquote>
-<p> Implicitly Unwrapped Optional 还可以确认是否有值。</p>
-<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> label != <span class="literal">nil</span> &#123;</span><br><span class="line">  label.text = <span class="string">"yes,there’s a label here"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p> Implicitly Unwrapped Optional 还可以确认是否有值。<br><figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> label != <span class="literal">nil</span> &#123;</span><br><span class="line">  label.text = <span class="string">"yes,there’s a label here"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>苹果推荐 Implicitly Unwrapped Optionals 只使用于那些非 <code>nil</code> 的确定值。预想的使用场景就是赋值，而不仅仅是初始化。</p>
 <p>另一个使用场景是在实现或重载 Cocoa 的方法，</p>
 <blockquote>
@@ -98,8 +95,7 @@
 <blockquote>
 <p>Excerpt From: Apple Inc. “Using Swift with Cocoa and Objective-C.”</p>
 </blockquote>
-<p>因此当你在实现某个代理方法的时候，你可以这么做：</p>
-<figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">tableView</span><span class="params">(tableView: UITableView! numberOfRowsInSection section: Int)</span></span> -&gt; <span class="type">Int</span> &#123;&#125;</span><br></pre></td></tr></table></figure>
+<p>因此当你在实现某个代理方法的时候，你可以这么做：<br><figure class="highlight swift"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">tableView</span><span class="params">(tableView: UITableView! numberOfRowsInSection section: Int)</span></span> -&gt; <span class="type">Int</span> &#123;&#125;</span><br></pre></td></tr></table></figure></p>
 <p>tableView 被作为一个 Implicitly Unwrapped Optional 传递。你可以确定 tableView 确实被传递进来，从而不需要确认 tableView 是否为 <code>nil</code> 。</p>
 <p>Optional 是权衡利弊的结果。一方面我们得到了统一表达“空值”的方式（不在需要 <code>NSNotFound</code>，<code>NSIntegerMax</code>，-1，0 来表达没有值），但如<a href="http://commandshift.co.uk/blog/2014/06/11/understanding-optionals-in-swift/" target="_blank" rel="noopener">这篇文章所说</a>，我们失去了发送 <code>nil</code> 的便捷安全。</p>
 
@@ -133,7 +129,7 @@
     
 <nav id="article-nav" class="article-nav">
   
-    <a href="/2015/03/02/2015-03-02-实现twitter iOS app UI/" id="article-nav-newer" class="article-nav-link-wrap newer">
+    <a href="/2015/03/02/2015-03-02-implementing-the-twitter-ios-app-ui/" id="article-nav-newer" class="article-nav-link-wrap newer">
       <strong class="article-nav-caption">Newer</strong>
       <div class="article-nav-title">
         
@@ -143,9 +139,9 @@
     </a>
   
   
-    <a href="/2015/02/15/2015-02-15-start/" id="article-nav-older" class="article-nav-link-wrap older">
+    <a href="/2014/11/04/2014-11-04-Jekyll/" id="article-nav-older" class="article-nav-link-wrap older">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">start</div>
+      <div class="article-nav-title">Jekyll</div>
     </a>
   
 </nav>
